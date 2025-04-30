@@ -3,19 +3,24 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node --loader ts-node/esm src/server.ts",
+    "dev": "nodemon"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
+    "@types/fluent-ffmpeg": "^2.1.27",
     "@types/node": "^22.15.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@fastify/express": "^4.0.2",
+    "@fastify/formbody": "^8.0.2",
     "acorn": "^8.14.1",
     "acorn-walk": "^8.3.4",
     "arg": "^4.1.3",
