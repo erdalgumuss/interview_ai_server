@@ -5,21 +5,34 @@ export const calculateFinalScores = ({
     speechFluencyScore,
   }: {
     gptScore: number;
-    confidenceScore: number; // yüz ifadesi confidence
-    voiceConfidenceScore: number; // ses tonu confidence
+    confidenceScore: number;
+    voiceConfidenceScore: number;
     speechFluencyScore: number;
   }): {
     communicationScore: number;
     overallScore: number;
   } => {
-    // İletişim skoru = yüz + ses + akıcılık
+    const weights = {
+      face: 0.4,
+      voice: 0.4,
+      fluency: 0.2,
+      gpt: 0.6,
+      communication: 0.4,
+    };
+  
+    const communicationComponents = [
+      { score: confidenceScore, weight: weights.face },
+      { score: voiceConfidenceScore, weight: weights.voice },
+      { score: speechFluencyScore, weight: weights.fluency },
+    ];
+  
+    const totalCommWeight = communicationComponents.reduce((sum, c) => sum + c.weight, 0);
     const communicationScore = Math.round(
-      (confidenceScore * 0.4 + voiceConfidenceScore * 0.4 + speechFluencyScore * 0.2)
+      communicationComponents.reduce((sum, c) => sum + (c.score * c.weight), 0) / totalCommWeight
     );
   
-    // Genel skor = GPT %60 + iletişim %40
     const overallScore = Math.round(
-      gptScore * 0.6 + communicationScore * 0.4
+      gptScore * weights.gpt + communicationScore * weights.communication
     );
   
     return {

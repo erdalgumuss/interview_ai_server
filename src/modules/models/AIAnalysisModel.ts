@@ -1,55 +1,52 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IAIAnalysis extends Document {
+  applicationId: mongoose.Types.ObjectId;
+  questionId?: mongoose.Types.ObjectId;
   transcriptionText: string;
   overallScore: number;
-  technicalSkillsScore?: number;
-  communicationScore?: number;
-  problemSolvingScore?: number;
-  personalityMatchScore?: number;
+  communicationScore: number;
+
+  // GPT sonuçları
+  answerRelevanceScore: number;
+  skillFitScore: number;
+  backgroundFitScore: number;
   keywordMatches: string[];
   strengths: string[];
   improvementAreas: { area: string; recommendation: string }[];
   recommendation: string;
-  analyzedAt: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  rawGptOutput?: any;
+
+  // Yüz ve ses analizleri
   engagementScore: number;
-confidenceScore: number;
-faceEmotionLabel: string;
+  confidenceScore: number;
+  faceEmotionLabel: string;
   voiceConfidenceScore: number;
   speechFluencyScore: number;
   voiceEmotionLabel: string;
-  videoPath: string;
-  audioPath: string;
-  videoEmotionLabel: string;
-  videoConfidenceScore: number;
-  videoEngagementScore: number;
-  
+  speechRate?: number;
+  averagePause?: number;
+  totalPauses?: number;
+
+  analysisVersion: string;
+  analyzedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const AIAnalysisSchema = new Schema<IAIAnalysis>(
   {
+    applicationId: { type: Schema.Types.ObjectId, ref: 'Application', required: true },
+    questionId: { type: Schema.Types.ObjectId, ref: 'Question' },
     transcriptionText: { type: String, required: true },
     overallScore: { type: Number, required: true },
-    technicalSkillsScore: { type: Number },
-    communicationScore: { type: Number },
-    problemSolvingScore: { type: Number },
-    personalityMatchScore: { type: Number },
+    communicationScore: { type: Number, required: true },
+
+    answerRelevanceScore: { type: Number, required: true },
+    skillFitScore: { type: Number },
+    backgroundFitScore: { type: Number },
     keywordMatches: [{ type: String }],
     strengths: [{ type: String }],
-    engagementScore: { type: Number },
-    confidenceScore: { type: Number },
-    faceEmotionLabel: { type: String },
-    voiceConfidenceScore: { type: Number }, 
-    speechFluencyScore: { type: Number }, 
-    voiceEmotionLabel: { type: String },
-    videoPath: { type: String },
-    audioPath: { type: String },
-    videoEmotionLabel: { type: String },
-    videoConfidenceScore: { type: Number },
-    videoEngagementScore: { type: Number },
-
     improvementAreas: [
       {
         area: { type: String },
@@ -57,11 +54,26 @@ const AIAnalysisSchema = new Schema<IAIAnalysis>(
       },
     ],
     recommendation: { type: String },
+    rawGptOutput: { type: Schema.Types.Mixed },
+
+    engagementScore: { type: Number },
+    confidenceScore: { type: Number },
+    faceEmotionLabel: { type: String },
+    voiceConfidenceScore: { type: Number },
+    speechFluencyScore: { type: Number },
+    voiceEmotionLabel: { type: String },
+    speechRate: { type: Number },
+    averagePause: { type: Number },
+    totalPauses: { type: Number },
+
+    analysisVersion: { type: String, default: 'v1' },
     analyzedAt: { type: Date, default: Date.now },
   },
   {
-    timestamps: true, // createdAt ve updatedAt otomatik olacak
+    timestamps: true,
   }
 );
+
+AIAnalysisSchema.index({ applicationId: 1, questionId: 1 });
 
 export const AIAnalysisModel = mongoose.model<IAIAnalysis>('AIAnalysis', AIAnalysisSchema);

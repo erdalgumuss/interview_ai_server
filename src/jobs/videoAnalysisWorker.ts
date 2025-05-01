@@ -5,29 +5,37 @@ import { connectMongoDB } from '../config/db.ts';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
 await connectMongoDB();
+
 const videoWorker = new Worker(
   'videoAnalysisQueue',
   async (job) => {
-    console.log(`🚀 Processing video job: ${job.id}`);
-    const result = await processVideoAnalysis(job.data);
-    return result;
+    try {
+      console.log(`🚀 [${new Date().toISOString()}] Processing job ${job.id}`);
+      const start = Date.now();
+      const result = await processVideoAnalysis(job.data);
+      const duration = Date.now() - start;
+      console.log(`✅ Job ${job.id} completed in ${duration}ms`);
+      return result;
+    } catch (error: any) {
+      console.error(`❌ Job ${job.id} failed:`, error.message);
+      throw error;
+    }
   },
   {
     connection: redisConfig,
-    concurrency: 1, // Aynı anda 2 video işlenebilir (ileride artırırız)
-    lockDuration: 600000, // İşlem sırasında işin kilitlenmesini sağlar
+    concurrency: 1,
+    lockDuration: 600000, // 10 dakikalık job kilidi
   }
 );
 
-// Event Listener'lar
+// Event listener'lar
 videoWorker.on('completed', (job) => {
-  console.log(`Video Job ${job.id} completed!`);
+  console.log(`🎉 Job ${job.id} marked as completed`);
 });
 
 videoWorker.on('failed', (job, err) => {
-  console.error(`Video Job ${job?.id} failed:`, err);
+  console.error(`🔥 Job ${job?.id} failed (attempts: ${job?.attemptsMade}):`, err.message);
 });
 
 export default videoWorker;

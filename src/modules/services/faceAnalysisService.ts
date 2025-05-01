@@ -3,7 +3,6 @@ export const analyzeFaceAndGestures = async (videoPath: string): Promise<{
     confidenceScore: number;
     emotionLabel: string;
   }> => {
-    // TODO: OpenCV + Mediapipe entegrasyonu buraya eklenecek
   
     console.log('🎭 Mocking face analysis for video:', videoPath);
   

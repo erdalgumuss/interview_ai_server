@@ -1,22 +1,31 @@
 import { FastifyInstance } from 'fastify';
 import { addVideoAnalysisJob } from '../modules/queue/addVideoAnalysisJob.ts';
 
+interface AnalyzeVideoPayload {
+  videoUrl: string;
+  applicationId: string;
+  questionId?: string;
+  interviewId?: string;
+}
+
 export async function analyzeVideoRoutes(server: FastifyInstance) {
   server.post('/analyzeVideo', async (request, reply) => {
-
-
     try {
-      const payload = request.body as any;
+      const payload = request.body as AnalyzeVideoPayload;
 
-      if (!payload || !payload.videoUrl || !payload.applicationId) {
-        return reply.status(400).send({ error: 'Invalid payload' });
+      if (!payload?.videoUrl || !payload?.applicationId) {
+        return reply.status(400).send({ error: 'Missing required fields: videoUrl or applicationId' });
       }
 
-     await addVideoAnalysisJob(payload);
+      if (!/^[0-9a-fA-F]{24}$/.test(payload.applicationId)) {
+        return reply.status(400).send({ error: 'Invalid applicationId format' });
+      }
 
-      return reply.send({ status: 'Job added to queue successfully' }); // hızlı cevap
+      await addVideoAnalysisJob(payload);
+      server.log.info(`🎬 Job added to queue for ${payload.videoUrl}`);
+      return reply.send({ status: 'Job added to queue successfully' });
     } catch (error) {
-      console.error('Error adding job:', error);
+      server.log.error('❌ Error adding job:', error);
       return reply.status(500).send({ error: 'Internal Server Error' });
     }
   });

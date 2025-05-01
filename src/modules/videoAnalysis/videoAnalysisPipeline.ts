@@ -1,13 +1,14 @@
-import { downloadVideo } from '../services/videoDownloadService.ts';
-import { getTranscription } from '../services/whisperService.ts';
-import { extractAudioFromVideo } from '../services/extractAudioService.ts';
-import { analyzeWithGPT } from '../services/gptService.ts';
-import { saveAIAnalysisResult } from './saveAIAnalysis.ts';
-import { analyzeVoiceProsody } from '../services/voiceProsodyService.ts';
+import fs from 'fs/promises';
 
-import fs from 'fs';
+import { downloadVideo } from '../services/videoDownloadService.ts';
+import { extractAudioFromVideo } from '../services/extractAudioService.ts';
+import { getTranscription, WhisperResponse } from '../services/whisperService.ts';
+import { analyzeWithGPT } from '../services/gptService.ts';
 import { analyzeFaceAndGestures } from '../services/faceAnalysisService.ts';
+import { analyzeVoiceProsody } from '../services/voiceProsodyService.ts';
 import { calculateFinalScores } from '../services/aiScoreCalculator.ts';
+import { saveAIAnalysisResult } from './saveAIAnalysis.ts';
+import { normalizeAnalysisInput } from '../utils/normalizeQuestionAnalysisInput.ts';
 
 export const processVideoAnalysis = async (jobData: any) => {
   const { videoUrl, question, interview } = jobData;
@@ -19,61 +20,53 @@ export const processVideoAnalysis = async (jobData: any) => {
   const audioPath = await extractAudioFromVideo(videoPath);
 
   console.log('🗣️ Step 3: Getting transcription from Whisper...');
-  const transcription = await getTranscription(audioPath);
+  const transcription: WhisperResponse = await getTranscription(audioPath);
   console.log('📝 Transcription:', transcription);
 
-  console.log('🤖 Step 4: Analyzing with GPT...');
-  const gptResult = await analyzeWithGPT(
-    question?.text || '',
-    question?.expectedAnswer || '',
-    transcription,
-    question?.keywords || [],
-    interview?.title || ''
-  );
+  const normalizedInput = normalizeAnalysisInput(jobData, transcription.text);
 
+  console.log('🤖 Step 4: Analyzing with GPT...');
+  const gptResult = await analyzeWithGPT(normalizedInput);
   console.log('📊 GPT Analysis:', gptResult);
-  
+
   console.log('🎭 Step 5: Analyzing face expressions...');
   const faceResult = await analyzeFaceAndGestures(videoPath);
   console.log('🧠 Face Analysis:', faceResult);
 
   console.log('🔊 Step 6: Analyzing voice prosody...');
-const voiceResult = await analyzeVoiceProsody(audioPath);
-console.log('📈 Voice Analysis:', voiceResult);
+  const voiceResult = await analyzeVoiceProsody(audioPath, transcription.words || []);
+  console.log('📈 Voice Analysis:', voiceResult);
 
-console.log('📊 Step 7: Calculating final scores...');
-const { communicationScore, overallScore } = calculateFinalScores({
-  gptScore: gptResult.answerRelevanceScore,
-  confidenceScore: faceResult.confidenceScore,
-  voiceConfidenceScore: voiceResult.voiceConfidenceScore,
-  speechFluencyScore: voiceResult.speechFluencyScore,
-});
-console.log('🧮 Final Scores:', { communicationScore, overallScore });
+  console.log('📊 Step 7: Calculating final scores...');
+  const { communicationScore, overallScore } = calculateFinalScores({
+    gptScore: gptResult.answerRelevanceScore,
+    confidenceScore: faceResult.confidenceScore,
+    voiceConfidenceScore: voiceResult.voiceConfidenceScore,
+    speechFluencyScore: voiceResult.speechFluencyScore,
+  });
+  console.log('🧮 Final Scores:', { communicationScore, overallScore });
 
-
-
-  console.log('💾 Step 5: Saving AI analysis to DB...');
+  console.log('💾 Step 8: Saving AI analysis to DB...');
   const savedResult = await saveAIAnalysisResult({
     videoResponseId: jobData.videoResponseId,
     applicationId: jobData.applicationId,
-    voiceResult,
-    transcription,
+    transcription: transcription.text,
     gptResult,
     faceResult,
+    voiceResult,
     overallScore,
     communicationScore,
+    // TODO: future fields like answerDuration, whisperConfidence can be added here
   });
 
-  // Geçici dosyaları temizle
-  fs.unlink(videoPath, (err) => {
-    if (err) console.error('⚠️ Failed to delete temp video file:', err);
-    else console.log('🧹 Temp video file deleted');
-  });
-
-  fs.unlink(audioPath, (err) => {
-    if (err) console.error('⚠️ Failed to delete temp audio file:', err);
-    else console.log('🧹 Temp audio file deleted');
-  });
+  try {
+    await fs.unlink(videoPath);
+    console.log('🧹 Temp video file deleted');
+    await fs.unlink(audioPath);
+    console.log('🧹 Temp audio file deleted');
+  } catch (err) {
+    console.error('⚠️ Failed to delete temp files:', err);
+  }
 
   return {
     transcription,

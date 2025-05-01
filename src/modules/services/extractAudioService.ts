@@ -1,9 +1,10 @@
 import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 export const extractAudioFromVideo = (videoPath: string): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const audioPath = path.resolve('/tmp', `audio_${Date.now()}.mp3`);
+    const audioPath = path.resolve('/tmp', `audio_${uuidv4()}.mp3`);
 
     ffmpeg(videoPath)
       .noVideo()
@@ -16,8 +17,8 @@ export const extractAudioFromVideo = (videoPath: string): Promise<string> => {
         resolve(audioPath);
       })
       .on('error', (err) => {
-        console.error('⚠️ Audio extraction failed', err);
-        reject(err);
+        console.error('⚠️ Audio extraction failed', err.message);
+        reject(new Error('Audio extraction failed: ' + err.message));
       });
   });
 };
