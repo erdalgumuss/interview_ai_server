@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 
+import { VideoAnalysisJob } from '../../types/VideoAnalysisJob.ts';
 import { downloadVideo } from '../services/videoDownloadService.ts';
 import { extractAudioFromVideo } from '../services/extractAudioService.ts';
 import { getTranscription, WhisperResponse } from '../services/whisperService.ts';
@@ -10,8 +11,8 @@ import { calculateFinalScores } from '../services/aiScoreCalculator.ts';
 import { saveAIAnalysisResult } from './saveAIAnalysis.ts';
 import { normalizeAnalysisInput } from '../utils/normalizeQuestionAnalysisInput.ts';
 
-export const processVideoAnalysis = async (jobData: any) => {
-  const { videoUrl, question, interview } = jobData;
+export const processVideoAnalysis = async (jobData: VideoAnalysisJob) => {
+  const { videoUrl, videoResponseId, applicationId } = jobData;
 
   console.log('🎬 Step 1: Downloading video...');
   const videoPath = await downloadVideo(videoUrl);
@@ -19,23 +20,23 @@ export const processVideoAnalysis = async (jobData: any) => {
   console.log('🎵 Step 2: Extracting audio...');
   const audioPath = await extractAudioFromVideo(videoPath);
 
-  console.log('🗣️ Step 3: Getting transcription from Whisper...');
+  console.log('🗣️ Step 3: Getting transcription...');
   const transcription: WhisperResponse = await getTranscription(audioPath);
-  console.log('📝 Transcription:', transcription);
+  console.log('📝 Transcription:', transcription.text.slice(0, 100) + '...');
 
   const normalizedInput = normalizeAnalysisInput(jobData, transcription.text);
 
-  console.log('🤖 Step 4: Analyzing with GPT...');
-  const gptResult = await analyzeWithGPT(normalizedInput);
-  console.log('📊 GPT Analysis:', gptResult);
+  console.log('🤖 Step 4-6: Running parallel AI analyses...');
+  const [gptResult, faceResult, voiceResult] = await Promise.all([
+    safeRun(() => analyzeWithGPT(normalizedInput), 'GPT'),
+    safeRun(() => analyzeFaceAndGestures(videoPath), 'Face'),
+    safeRun(() => analyzeVoiceProsody(audioPath, transcription.words || []), 'Voice'),
+  ]);
 
-  console.log('🎭 Step 5: Analyzing face expressions...');
-  const faceResult = await analyzeFaceAndGestures(videoPath);
-  console.log('🧠 Face Analysis:', faceResult);
-
-  console.log('🔊 Step 6: Analyzing voice prosody...');
-  const voiceResult = await analyzeVoiceProsody(audioPath, transcription.words || []);
-  console.log('📈 Voice Analysis:', voiceResult);
+  if (!gptResult || !faceResult || !voiceResult) {
+    console.warn('⚠️ One or more AI analysis modules failed. Skipping save.');
+    throw new Error('Incomplete AI analysis, job will be retried or logged.');
+  }
 
   console.log('📊 Step 7: Calculating final scores...');
   const { communicationScore, overallScore } = calculateFinalScores({
@@ -48,15 +49,14 @@ export const processVideoAnalysis = async (jobData: any) => {
 
   console.log('💾 Step 8: Saving AI analysis to DB...');
   const savedResult = await saveAIAnalysisResult({
-    videoResponseId: jobData.videoResponseId,
-    applicationId: jobData.applicationId,
+    videoResponseId,
+    applicationId,
     transcription: transcription.text,
     gptResult,
     faceResult,
     voiceResult,
     overallScore,
     communicationScore,
-    // TODO: future fields like answerDuration, whisperConfidence can be added here
   });
 
   try {
@@ -75,3 +75,13 @@ export const processVideoAnalysis = async (jobData: any) => {
     videoUrl,
   };
 };
+
+async function safeRun<T>(fn: () => Promise<T>, label: string): Promise<T | null> {
+  try {
+    const result = await fn();
+    return result;
+  } catch (err) {
+    console.warn(`⚠️ ${label} analysis failed:`, err);
+    return null;
+  }
+}

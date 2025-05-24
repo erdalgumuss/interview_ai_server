@@ -1,0 +1,134 @@
+project_name: Interview AI Video Analysis System
+version: 1.0.0
+description: >
+  This project processes video-based job interview responses.
+  It extracts audio and visual features, applies AI scoring using GPT,
+  and produces a structured, multi-modal candidate evaluation.
+  The system is modular and supports external Python microservices.
+
+current_status:
+  - Node.js-based core pipeline is operational.
+  - GPT-based semantic scoring is functional.
+  - Audio extraction and Whisper transcription integration working.
+  - Basic voice and facial analysis mocks are in place.
+  - Redis + BullMQ job queue running.
+  - MongoDB stores video response and analysis results.
+
+goals:
+  - Add real-time multimodal analysis combining face expressions and transcript.
+  - Integrate OpenFace via a Python FastAPI service.
+  - Use a Python microservice for advanced voice prosody and emotion analysis.
+  - Align voice + face + word timeline data for GPT-4o interpretation.
+  - Normalize all data into a unified JSON structure per video question.
+
+---
+
+architecture:
+  node_server:
+    role: Core processing orchestrator
+    stack: Node.js + Fastify + BullMQ + Axios + MongoDB
+    jobs:
+      - Download video
+      - Extract audio
+      - Transcribe via Whisper
+      - Analyze with GPT
+      - Analyze face via Python API
+      - Analyze voice via Python API
+      - Calculate final scores
+      - Save results to MongoDB
+    directory: ./src/
+
+  python_microservices:
+    face_analyzer:
+      port: 8001
+      stack: Python + FastAPI + OpenFace
+      input: MP4 video file
+      output: Frame-level emotion, confidence, engagement (with timestamp)
+    voice_analyzer:
+      port: 8002
+      stack: Python + FastAPI + librosa or openSMILE
+      input: WAV or MP3 audio file
+      output: Voice emotion, confidence, fluency, pitch/tone
+    whisper_service:
+      port: 8003
+      stack: Python + FastAPI + openai-whisper
+      input: Audio file
+      output: Transcript + word-level timestamps + confidence
+
+  timeline_aligner:
+    language: TypeScript
+    module: src/modules/services/timelineNormalizer.ts
+    role: Matches Whisper word timestamps with frame-level face analysis
+    output: Enriched words array with emotionDistribution, entropy, avgConfidence
+
+---
+
+data_flow:
+  1. POST /api/analyzeVideo  ← client submits interview video
+  2. Job added to Redis queue
+  3. Worker downloads video
+  4. Audio extracted via ffmpeg
+  5. Transcription from Whisper API (returns words[])
+  6. GPT scoring based on transcript and question metadata
+  7. Send video to Python face analyzer → returns frame data
+  8. Send audio to Python voice analyzer → returns prosody/emotion
+  9. Timeline normalizer merges words + face frames
+  10. Final scores calculated
+  11. MongoDB updated with structured AI analysis
+
+---
+
+database_collections:
+  - VideoResponse: Tracks video job status and question
+  - AIAnalysis:
+      - transcriptText
+      - scores (gpt, face, voice)
+      - enrichedWords[]
+      - emotionEntropy
+      - keywordMatches
+      - strengths / improvementAreas
+      - finalRecommendation
+
+---
+
+open_tasks:
+  - [ ] Implement real OpenFace pipeline inside face_analyzer Python service
+  - [ ] Build voice prosody analyzer Python microservice
+  - [ ] Add `/analyze-voice/` endpoint in Python
+  - [ ] Store timeline-normalized word-level emotion in DB
+  - [ ] Improve error handling for failed media downloads
+  - [ ] Visualize analysis in a frontend dashboard (optional)
+
+---
+
+recommendations:
+  - Use Docker Compose to run Node.js + Redis + MongoDB + Python services locally.
+  - Add health check routes to all microservices for robustness.
+  - Consider batching multi-question interviews in the future.
+  - Add optional OpenAI Vision endpoint for frame-level gesture reading.
+
+---
+
+file_structure (desired final):
+  interview_ai_server/
+    ├── src/
+    │   ├── config/
+    │   ├── jobs/
+    │   ├── modules/
+    │   │   ├── models/
+    │   │   ├── queue/
+    │   │   ├── services/
+    │   │   │   ├── gptService.ts
+    │   │   │   ├── whisperService.ts
+    │   │   │   ├── voiceProsodyService.ts
+    │   │   │   ├── faceAnalysisService.ts
+    │   │   │   └── timelineNormalizer.ts
+    │   └── server.ts
+    └── ai_services/
+        ├── face_analyzer/
+        │   ├── app.py
+        │   ├── processor.py
+        │   ├── Dockerfile
+        ├── voice_analyzer/
+        └── whisper_service/
+

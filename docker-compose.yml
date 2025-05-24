@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  node_server:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb+srv://dytsefikaarslan:rDxoXABIX5d9wASc@cluster0.xsdrdus.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - FACE_ANALYZER_URL=http://face_analyzer:8001
+      - VOICE_ANALYZER_URL=http://voice_analyzer:8002
+      - WHISPER_SERVICE_URL=http://whisper_service:8003
+    command: npm run dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - redis
+      - mongodb
+
+  worker:
+    build: .
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+      - MONGODB_URI=mongodb://mongodb:27017/interview_ai
+      - FACE_ANALYZER_URL=http://face_analyzer:8001
+      - VOICE_ANALYZER_URL=http://voice_analyzer:8002
+      - WHISPER_SERVICE_URL=http://whisper_service:8003
+    command: node --loader ts-node/esm src/jobs/index.ts
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - redis
+      - mongodb
+      - node_server
+
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  face_analyzer:
+    build: ./ai_services/face_analyzer
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ai_services/face_analyzer:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  voice_analyzer:
+    build: ./ai_services/voice_analyzer
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./ai_services/voice_analyzer:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  whisper_service:
+    build: ./ai_services/whisper_service
+    ports:
+      - "8003:8003"
+    volumes:
+      - ./ai_services/whisper_service:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  redis_data:
+  mongodb_data:

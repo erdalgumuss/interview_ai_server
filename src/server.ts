@@ -33,3 +33,4 @@ process.on('SIGINT', async () => {
 });
 
 start();
+//example video link for ai analysis: "https://drive.google.com/uc?export=download&id=1HtpEhqZ54xEGNYmtU_igr2jpHLur6ADy"

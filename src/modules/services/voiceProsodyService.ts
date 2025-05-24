@@ -17,7 +17,7 @@ export const analyzeVoiceProsody = async (
   let speechRate = 0;
   let averagePause = 0;
   let totalPauses = 0;
-  let voiceConfidenceScore = 0;
+  let avgConfidence = 0;
 
   if (words.length >= 2) {
     const duration = words[words.length - 1].end - words[0].start;
@@ -28,18 +28,24 @@ export const analyzeVoiceProsody = async (
       const pause = words[i].start - words[i - 1].end;
       if (pause > 0.3) pauses.push(pause);
     }
+
     totalPauses = pauses.length;
     averagePause = pauses.length > 0
       ? pauses.reduce((a, b) => a + b, 0) / pauses.length
       : 0;
 
-    voiceConfidenceScore = words.reduce((sum, w) => sum + w.confidence, 0) / words.length;
+    const validConfidences = words
+      .map(w => w.confidence)
+      .filter(c => typeof c === 'number' && !isNaN(c));
+
+    avgConfidence = validConfidences.length > 0
+      ? validConfidences.reduce((sum, c) => sum + c, 0) / validConfidences.length
+      : 0;
   }
 
-  // Mock duygu (ileride analiz yapılacak)
+  const voiceConfidenceScore = Math.round(avgConfidence * 100);
   const voiceEmotionLabel = 'Calm';
 
-  // Fluency score: daha çok duraklama varsa düşer
   const speechFluencyScore = Math.max(
     0,
     100 - (averagePause * 50 + totalPauses * 5)
@@ -47,10 +53,10 @@ export const analyzeVoiceProsody = async (
 
   return {
     speechFluencyScore: Math.round(speechFluencyScore),
-    voiceConfidenceScore: Math.round(voiceConfidenceScore * 100),
+    voiceConfidenceScore: isNaN(voiceConfidenceScore) ? 0 : voiceConfidenceScore,
     voiceEmotionLabel,
-    speechRate: Number(speechRate.toFixed(2)),
-    averagePause: Number(averagePause.toFixed(2)),
+    speechRate: Number.isFinite(speechRate) ? Number(speechRate.toFixed(2)) : 0,
+    averagePause: Number.isFinite(averagePause) ? Number(averagePause.toFixed(2)) : 0,
     totalPauses,
   };
 };
