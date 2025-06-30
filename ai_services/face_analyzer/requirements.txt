@@ -2,6 +2,6 @@ fastapi
 uvicorn
 pydantic
 # Gerçek analiz için eklenecekler:
-# opencv-python
-# mediapipe
-# deepface
+opencv-python
+mediapipe
+deepface

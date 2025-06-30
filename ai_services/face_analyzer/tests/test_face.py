@@ -4,7 +4,6 @@ def test_face_analysis():
     payload = {
         "video_path": "/tmp/test_erdal.mp4"
     }
-
     try:
         response = requests.post("http://localhost:8000/face/analyze", json=payload)
         print("📡 Status Code:", response.status_code)
@@ -18,7 +17,11 @@ def test_face_analysis():
 
         assert "dominantEmotions" in data
         assert "eyeContactRatio" in data
-        assert isinstance(data["confidenceScore"], int)
+        assert isinstance(data["confidenceScore"], (int, float))
+        assert isinstance(data["engagementScore"], (int, float))
+        assert "framesProcessed" in data
+
+        print("🎉 Tüm testler geçti.")
 
     except Exception as e:
         print("❌ Test crashed:", e)

@@ -60,24 +60,27 @@ services:
       - ./ai_services/face_analyzer:/app
     environment:
       - PYTHONUNBUFFERED=1
+      - PORT=8001
 
-  voice_analyzer:
-    build: ./ai_services/voice_analyzer
-    ports:
-      - "8002:8002"
-    volumes:
-      - ./ai_services/voice_analyzer:/app
-    environment:
-      - PYTHONUNBUFFERED=1
+  # voice_analyzer:
+  #   build: ./ai_services/voice_analyzer
+  #   ports:
+  #     - "8002:8002"
+  #   volumes:
+  #     - ./ai_services/voice_analyzer:/app
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - PORT=8002
 
-  whisper_service:
-    build: ./ai_services/whisper_service
-    ports:
-      - "8003:8003"
-    volumes:
-      - ./ai_services/whisper_service:/app
-    environment:
-      - PYTHONUNBUFFERED=1
+  # whisper_service:
+  #   build: ./ai_services/whisper_service
+  #   ports:
+  #     - "8003:8003"
+  #   volumes:
+  #     - ./ai_services/whisper_service:/app
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - PORT=8003
 
 volumes:
   redis_data:
