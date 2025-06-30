@@ -1,38 +1,38 @@
-version: '3.8'
+version: "3.9"
 
 services:
   node_server:
     build: .
+    command: npm run dev
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=development
-      - REDIS_URL=redis://redis:6379
-      - MONGODB_URI=mongodb+srv://dytsefikaarslan:rDxoXABIX5d9wASc@cluster0.xsdrdus.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - FACE_ANALYZER_URL=http://face_analyzer:8001
-      - VOICE_ANALYZER_URL=http://voice_analyzer:8002
-      - WHISPER_SERVICE_URL=http://whisper_service:8003
-    command: npm run dev
+      NODE_ENV: development
+      REDIS_URL: redis://redis:6379
+      MONGODB_URI: mongodb://mongodb:27017/interview_ai
+      FACE_ANALYZER_URL: http://face_analyzer:8001
+      VOICE_ANALYZER_URL: http://voice_analyzer:8002
+      WHISPER_SERVICE_URL: http://whisper_service:8003
     volumes:
       - .:/app
-      - /app/node_modules
+      - ./tmp:/tmp
     depends_on:
       - redis
       - mongodb
 
   worker:
     build: .
-    environment:
-      - NODE_ENV=development
-      - REDIS_URL=redis://redis:6379
-      - MONGODB_URI=mongodb://mongodb:27017/interview_ai
-      - FACE_ANALYZER_URL=http://face_analyzer:8001
-      - VOICE_ANALYZER_URL=http://voice_analyzer:8002
-      - WHISPER_SERVICE_URL=http://whisper_service:8003
     command: node --loader ts-node/esm src/jobs/index.ts
+    environment:
+      NODE_ENV: development
+      REDIS_URL: redis://redis:6379
+      MONGODB_URI: mongodb://mongodb:27017/interview_ai
+      FACE_ANALYZER_URL: http://face_analyzer:8001
+      VOICE_ANALYZER_URL: http://voice_analyzer:8002
+      WHISPER_SERVICE_URL: http://whisper_service:8003
     volumes:
       - .:/app
-      - /app/node_modules
+      - ./tmp:/tmp
     depends_on:
       - redis
       - mongodb
@@ -54,33 +54,36 @@ services:
 
   face_analyzer:
     build: ./ai_services/face_analyzer
+    command: uvicorn main:app --host 0.0.0.0 --port 8001
     ports:
       - "8001:8001"
     volumes:
-      - ./ai_services/face_analyzer:/app
+      - ./tmp:/tmp
     environment:
-      - PYTHONUNBUFFERED=1
-      - PORT=8001
+      PYTHONUNBUFFERED: 1
+      PORT: 8001
 
   # voice_analyzer:
   #   build: ./ai_services/voice_analyzer
+  #   command: uvicorn main:app --host 0.0.0.0 --port 8002
   #   ports:
   #     - "8002:8002"
   #   volumes:
-  #     - ./ai_services/voice_analyzer:/app
+  #     - ./tmp:/tmp
   #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - PORT=8002
+  #     PYTHONUNBUFFERED: 1
+  #     PORT: 8002
 
   # whisper_service:
   #   build: ./ai_services/whisper_service
+  #   command: uvicorn main:app --host 0.0.0.0 --port 8003
   #   ports:
   #     - "8003:8003"
   #   volumes:
-  #     - ./ai_services/whisper_service:/app
+  #     - ./tmp:/tmp
   #   environment:
-  #     - PYTHONUNBUFFERED=1
-  #     - PORT=8003
+  #     PYTHONUNBUFFERED: 1
+  #     PORT: 8003
 
 volumes:
   redis_data:
