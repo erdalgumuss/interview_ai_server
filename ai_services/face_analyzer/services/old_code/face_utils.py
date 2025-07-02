@@ -5,7 +5,7 @@ import mediapipe as mp
 from deepface import DeepFace
 from collections import Counter
 from typing import Tuple
-from services.score_utils import calculate_confidence_score, calculate_engagement_score
+from ai_services.face_analyzer.services.old_code.score_utils import calculate_confidence_score, calculate_engagement_score
 
 def analyze_face_video(video_path: str) -> dict:
     cap = cv2.VideoCapture(video_path)
