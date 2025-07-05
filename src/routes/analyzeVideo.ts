@@ -1,3 +1,4 @@
+//analayzeVideo.ts
 import { FastifyInstance } from 'fastify';
 import { addVideoAnalysisJob } from '../modules/queue/addVideoAnalysisJob.ts';
 

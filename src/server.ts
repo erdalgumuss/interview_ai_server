@@ -1,3 +1,5 @@
+//server.ts
+
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
 import { analyzeVideoRoutes } from './routes/analyzeVideo.ts';

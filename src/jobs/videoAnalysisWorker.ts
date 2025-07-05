@@ -1,3 +1,5 @@
+//videoAnalysisWorker.ts
+
 import { Worker } from 'bullmq';
 import { redisConfig } from '../config/redis.ts';
 import { processVideoAnalysis } from '../modules/videoAnalysis/videoAnalysisPipeline.ts';
@@ -13,7 +15,7 @@ const videoWorker = new Worker(
     try {
       console.log(`🚀 [${new Date().toISOString()}] Processing job ${job.id}`);
       const start = Date.now();
-      const result = await processVideoAnalysis(job.data);
+      const result = await processVideoAnalysis(job.data, String(job.id));
       const duration = Date.now() - start;
       console.log(`✅ Job ${job.id} completed in ${duration}ms`);
       return result;

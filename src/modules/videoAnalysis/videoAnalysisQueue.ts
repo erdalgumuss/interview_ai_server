@@ -1,3 +1,5 @@
+//videoAnalysisQueue.ts
+// --- a/file:///home/alfonso/interview_ai_server/src/modules/videoAnalysis/videoAnalysisQueue.ts
 import { Queue, QueueEvents } from 'bullmq';
 import { redisConfig } from '../../config/redis.ts';
 

@@ -3,9 +3,10 @@ import uuid
 import os
 
 # Ortak Redis bağlantısı (env ile ayarlanabilir)
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")      # docker-compose için 'redis'
 REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 REDIS_DB   = int(os.getenv("REDIS_DB", 0))
+
 r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
 
 def enqueue_job(data: dict) -> str:
