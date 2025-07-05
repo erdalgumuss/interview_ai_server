@@ -22,21 +22,14 @@ type AIAnalysisStatus = {
 export async function updateJobStatus(
   jobId: string,
   status: string,
-  aiStatus?: AIAnalysisStatus,
   extra?: Record<string, any>
 ) {
   if (!jobId) return;
   const statusObj: Record<string, string> = { status, updatedAt: new Date().toISOString() };
-
-  if (aiStatus) {
-    // JSON olarak saklanır, anahtar: "aiStatus"
-    statusObj.aiStatus = JSON.stringify(aiStatus);
-  }
   if (extra) {
     for (const [k, v] of Object.entries(extra)) {
       statusObj[k] = typeof v === 'string' ? v : JSON.stringify(v);
     }
   }
-
   await redis.hset(`videoAnalysisJob:${jobId}`, statusObj);
 }

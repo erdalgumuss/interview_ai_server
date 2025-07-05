@@ -1,4 +1,3 @@
-//analayzeVideo.ts
 import { FastifyInstance } from 'fastify';
 import { addVideoAnalysisJob } from '../modules/queue/addVideoAnalysisJob.ts';
 
@@ -22,9 +21,10 @@ export async function analyzeVideoRoutes(server: FastifyInstance) {
         return reply.status(400).send({ error: 'Invalid applicationId format' });
       }
 
-      await addVideoAnalysisJob(payload);
-      server.log.info(`🎬 Job added to queue for ${payload.videoUrl}`);
-      return reply.send({ status: 'Job added to queue successfully' });
+      const jobId = await addVideoAnalysisJob(payload); // JobId'yi al!
+      server.log.info(`🎬 Job added to queue for ${payload.videoUrl}, jobId: ${jobId}`);
+
+      return reply.send({ status: 'Job added to queue successfully', jobId }); // JobId ile dön!
     } catch (error) {
       server.log.error('❌ Error adding job:', error);
       return reply.status(500).send({ error: 'Internal Server Error' });

@@ -1,22 +1,31 @@
-//videoAnalysisQueue.ts
-// --- a/file:///home/alfonso/interview_ai_server/src/modules/videoAnalysis/videoAnalysisQueue.ts
 import { Queue, QueueEvents } from 'bullmq';
 import { redisConfig } from '../../config/redis.ts';
+import { updateJobStatus } from '../queue/updateJobStatus';
 
+// Queue oluşturuluyor
 export const videoAnalysisQueue = new Queue('videoAnalysisQueue', {
   connection: redisConfig,
 });
 
+// Event dinleyicileri
 const events = new QueueEvents('videoAnalysisQueue', {
   connection: redisConfig,
 });
 
-events.on('completed', ({ jobId }) => {
+// Job tamamlanınca status güncelle
+events.on('completed', async ({ jobId }) => {
   console.log(`✅ Job completed: ${jobId}`);
+  if (jobId) {
+    await updateJobStatus(jobId, 'completed');
+  }
 });
 
-events.on('failed', ({ jobId, failedReason }) => {
+// Job hata alınca status güncelle
+events.on('failed', async ({ jobId, failedReason }) => {
   console.error(`❌ Job failed: ${jobId} - ${failedReason}`);
+  if (jobId) {
+    await updateJobStatus(jobId, 'failed', { error: failedReason });
+  }
 });
 
 videoAnalysisQueue.on('error', (err) => {
