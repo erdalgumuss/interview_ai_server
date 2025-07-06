@@ -1,3 +1,6 @@
+//videoResponseModel.ts
+// This file defines the Mongoose model for video responses in the application.
+
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IVideoResponse extends Document {

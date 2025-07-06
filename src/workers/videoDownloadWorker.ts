@@ -1,22 +1,32 @@
-import { getJobsToDownload, markVideoDownloaded } from '../modules/queue/jobStatusHelpers.ts';
-import { downloadVideo } from '../modules/services/videoDownloadService.ts';
-import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
+import {
+  getJobsToDownload,
+  markVideoDownloaded,
+  PipelineStage
+} from '../modules/queue/jobStatusHelpers';
+import { downloadVideo } from '../modules/services/videoDownloadService';
+import { updateJobStatus } from '../modules/queue/updateJobStatus';
 
-const POLL_INTERVAL_MS = 2000; // Her 2 sn'de bir kontrol et
+const POLL_INTERVAL_MS = 2000;
 const WORKER_NAME = 'videoDownloadWorker';
 
 async function processJob(jobId: string, jobData: any) {
   try {
     console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
-    await updateJobStatus(jobId, 'downloading_video');
-    // Videoyu indir
+    // 1. Statüyü güncelle: Download başlıyor
+    await updateJobStatus(jobId, PipelineStage.Downloading);
+
+    // 2. Video indirme işlemi
     const videoPath = await downloadVideo(jobData.videoUrl);
-    // Flag: video indirildi
+
+    // 3. Videonun indirildiğini markla (hem Redis step flag, hem status)
     await markVideoDownloaded(jobId, videoPath);
-    await updateJobStatus(jobId, 'video_downloaded', { videoPath });
+
+    // 4. İsteğe bağlı: job status pipeline'da video_downloaded'a geçir
+    await updateJobStatus(jobId, PipelineStage.Downloaded, { videoPath });
+
     console.log(`[${WORKER_NAME}] Job ${jobId} video downloaded.`);
   } catch (err) {
-    await updateJobStatus(jobId, 'failed', { error: (err as any)?.message || 'Unknown error' });
+    await updateJobStatus(jobId, PipelineStage.Failed, { error: (err as any)?.message || 'Unknown error' });
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);
   }
 }
@@ -24,7 +34,6 @@ async function processJob(jobId: string, jobData: any) {
 async function poll() {
   while (true) {
     try {
-      // Bu fonksiyon iş sırası kendine gelen ve videosu indirilmeyen işleri döner:
       const jobs = await getJobsToDownload();
       for (const { jobId, jobData } of jobs) {
         await processJob(jobId, jobData);

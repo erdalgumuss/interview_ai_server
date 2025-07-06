@@ -1,6 +1,10 @@
-import { getJobsToTranscribe, markTranscribed } from '../modules/queue/jobStatusHelpers.ts';
-import { getTranscription } from '../modules/services/whisperService.ts';
-import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
+import {
+  getJobsToTranscribe,
+  markTranscribed,
+  PipelineStage
+} from '../modules/queue/jobStatusHelpers';
+import { getTranscription } from '../modules/services/whisperService';
+import { updateJobStatus } from '../modules/queue/updateJobStatus';
 
 const POLL_INTERVAL_MS = 2000;
 const WORKER_NAME = 'transcriptionWorker';
@@ -8,15 +12,21 @@ const WORKER_NAME = 'transcriptionWorker';
 async function processJob(jobId: string, jobData: any) {
   try {
     console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
-    await updateJobStatus(jobId, 'transcribing_audio');
-    // Transcript çıkar
+    // 1. Status: Transcribing başlat
+    await updateJobStatus(jobId, PipelineStage.Transcribing);
+
+    // 2. Transcript çıkar
     const transcription = await getTranscription(jobData.audioPath);
-    // Sonucu ve flag’i kaydet
+
+    // 3. Sonucu kaydet
     await markTranscribed(jobId, transcription);
-    await updateJobStatus(jobId, 'audio_transcribed', { transcription });
+
+    // 4. Pipeline status güncelle
+    await updateJobStatus(jobId, PipelineStage.AudioTranscribed, { transcription: transcription.text });
+
     console.log(`[${WORKER_NAME}] Job ${jobId} transcription complete.`);
   } catch (err) {
-    await updateJobStatus(jobId, 'failed', { error: (err as any)?.message || 'Unknown error' });
+    await updateJobStatus(jobId, PipelineStage.Failed, { error: (err as any)?.message || 'Unknown error' });
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);
   }
 }
@@ -24,7 +34,6 @@ async function processJob(jobId: string, jobData: any) {
 async function poll() {
   while (true) {
     try {
-      // Bu fonksiyon, transkript çıkarılacak işleri bulur:
       const jobs = await getJobsToTranscribe();
       for (const { jobId, jobData } of jobs) {
         await processJob(jobId, jobData);

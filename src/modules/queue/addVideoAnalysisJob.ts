@@ -21,16 +21,17 @@ export const addVideoAnalysisJob = async (data: VideoAnalysisJobData) => {
   // **Başlangıçta tüm pipeline flag'lerini False olarak set et!**
   // Status hash'i pipeline'daki tüm adımları gösteriyor:
   await updateJobStatus(job.id, 'queued', {
-    video_downloaded: false,
-    audio_extracted: false,
-    transcribed: false,
-    face_analyzed: false,
-    voice_analyzed: false,
-    gpt_analyzed: false,
-    final_scored: false,
-    results_saved: false,
-    error: null,
-  });
+  video_downloaded: 'pending',
+  audio_extracted: 'pending',
+  transcribed: 'pending',
+  face_analyzed: 'pending',
+  voice_analyzed: 'pending',
+  gpt_analyzed: 'pending',
+  final_scored: 'pending',
+  results_saved: 'pending',
+  error: '', // Boş string, null değil!
+});
+
 
   console.log(`📥 Job enqueued: ID=${job.id}, App=${data.applicationId}`);
   return job.id;

@@ -1,6 +1,5 @@
-// src/workers/resultSaverWorker.ts
 import { getJobsToSave, markSaved } from '../modules/queue/jobStatusHelpers.ts';
-import { saveAIAnalysisResult } from '../modules/videoAnalysis/saveAIAnalysis.ts';
+import { ApplicationSubmissionModel } from '../modules/models/applicationSubmission.model.ts';
 import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 const POLL_INTERVAL_MS = 2000;
@@ -8,20 +7,51 @@ const WORKER_NAME = 'resultSaverWorker';
 
 async function processJob(jobId: string, jobData: any) {
   try {
-    await updateJobStatus(jobId, 'saving_results', jobData.aiStatus);
-    const savedResult = await saveAIAnalysisResult({
-      videoResponseId: jobData.videoResponseId,
-      applicationId: jobData.applicationId,
-      transcription: jobData.transcription,
-      gptResult: jobData.gptResult,
-      faceResult: jobData.faceResult,
-      voiceResult: jobData.voiceResult,
-      overallScore: jobData.overallScore,
-      communicationScore: jobData.communicationScore,
-    });
-    await markSaved(jobId, savedResult._id);
-    await updateJobStatus(jobId, 'completed', { savedAnalysisId: savedResult._id });
-    console.log(`[${WORKER_NAME}] Job ${jobId} results saved`);
+    console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
+    await updateJobStatus(jobId, 'saving_results');
+
+    // Gerekli alanlar
+    const {
+      applicationSubmissionId,
+      videoResponseId,
+      transcription,
+      gptResult,
+      faceResult,
+      voiceResult,
+      communicationScore,
+      overallScore
+    } = jobData;
+
+    // Sonuçları ilgili videoResponse altına Mongo'da yaz
+    const updated = await ApplicationSubmissionModel.updateOne(
+      {
+        _id: applicationSubmissionId,
+        'videoResponses.videoResponseId': videoResponseId
+      },
+      {
+        $set: {
+          'videoResponses.$.aiAnalysis': {
+            transcriptionText: transcription,
+            gptResult: gptResult ? JSON.parse(gptResult) : {},
+            faceResult: faceResult ? JSON.parse(faceResult) : {},
+            voiceResult: voiceResult ? JSON.parse(voiceResult) : {},
+            overallScore: overallScore ? Number(overallScore) : null,
+            communicationScore: communicationScore ? Number(communicationScore) : null,
+            // Buraya ihtiyaca göre tüm skorlar ve çıktılar eklenebilir
+          },
+          'videoResponses.$.status': 'completed'
+        }
+      }
+    );
+
+    // Başarıyla kaydedildi mi kontrol
+    if (updated.modifiedCount > 0) {
+      await markSaved(jobId, videoResponseId);
+      await updateJobStatus(jobId, 'results_saved', { savedAnalysisId: videoResponseId });
+      console.log(`[${WORKER_NAME}] Job ${jobId} analysis saved to DB.`);
+    } else {
+      throw new Error('Mongo update failed or nothing modified');
+    }
   } catch (err) {
     await updateJobStatus(jobId, 'failed', { error: (err as any)?.message || 'Unknown error' });
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);

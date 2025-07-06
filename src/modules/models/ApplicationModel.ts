@@ -1,3 +1,7 @@
+//applicationModel.ts
+// This file defines the Mongoose model for applications in the interview AI system.
+
+
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IApplication extends Document {

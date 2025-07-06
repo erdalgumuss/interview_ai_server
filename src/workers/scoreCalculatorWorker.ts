@@ -1,4 +1,3 @@
-// src/workers/scoreCalculatorWorker.ts
 import { getJobsToScore, markScored } from '../modules/queue/jobStatusHelpers.ts';
 import { calculateFinalScores } from '../modules/services/aiScoreCalculator.ts';
 import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
@@ -8,18 +7,31 @@ const WORKER_NAME = 'scoreCalculatorWorker';
 
 async function processJob(jobId: string, jobData: any) {
   try {
-    await updateJobStatus(jobId, 'calculating_final_scores', jobData.aiStatus);
-    // AI sonuçlarını al
-    const { gptResult, faceResult, voiceResult } = jobData;
+    console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
+    await updateJobStatus(jobId, 'calculating_final_scores');
+
+    // Alt skorlar gpt, face, voice analizlerinden alınır
+    const gptResult = jobData.gptResult ? JSON.parse(jobData.gptResult) : {};
+    const faceResult = jobData.faceResult ? JSON.parse(jobData.faceResult) : {};
+    const voiceResult = jobData.voiceResult ? JSON.parse(jobData.voiceResult) : {};
+
+    // Skorları hesapla
     const { communicationScore, overallScore } = calculateFinalScores({
-      gptScore: JSON.parse(gptResult).answerRelevanceScore,
-      confidenceScore: JSON.parse(faceResult).confidenceScore,
-      voiceConfidenceScore: JSON.parse(voiceResult).voiceConfidenceScore,
-      speechFluencyScore: JSON.parse(voiceResult).speechFluencyScore,
+      gptScore: gptResult.answerRelevanceScore,
+      confidenceScore: faceResult.confidenceScore,
+      voiceConfidenceScore: voiceResult.voiceConfidenceScore,
+      speechFluencyScore: voiceResult.speechFluencyScore,
     });
+
+    // Sonucu kaydet
     await markScored(jobId, communicationScore, overallScore);
-    await updateJobStatus(jobId, 'final_score_calculated', { communicationScore, overallScore });
-    console.log(`[${WORKER_NAME}] Job ${jobId} scores calculated`);
+    await updateJobStatus(jobId, 'final_score_calculated', {
+      communicationScore: communicationScore.toString(),
+      overallScore: overallScore.toString(),
+
+    });
+
+    console.log(`[${WORKER_NAME}] Job ${jobId} score calculated.`);
   } catch (err) {
     await updateJobStatus(jobId, 'failed', { error: (err as any)?.message || 'Unknown error' });
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);
