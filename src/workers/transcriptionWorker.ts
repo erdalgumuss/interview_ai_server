@@ -1,10 +1,12 @@
 import {
   getJobsToTranscribe,
+  markTranscribing,
   markTranscribed,
-  PipelineStage
-} from '../modules/queue/jobStatusHelpers';
-import { getTranscription } from '../modules/services/whisperService';
-import { updateJobStatus } from '../modules/queue/updateJobStatus';
+  PipelineStage,
+  PipelineStepStatus,
+} from '../modules/queue/jobStatusHelpers.ts';
+import { getTranscription } from '../modules/services/whisperService.ts';
+import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 const POLL_INTERVAL_MS = 2000;
 const WORKER_NAME = 'transcriptionWorker';
@@ -12,21 +14,26 @@ const WORKER_NAME = 'transcriptionWorker';
 async function processJob(jobId: string, jobData: any) {
   try {
     console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
-    // 1. Status: Transcribing başlat
-    await updateJobStatus(jobId, PipelineStage.Transcribing);
+
+    // 1. Status: Transcribing başlat (flag + status)
+    await markTranscribing(jobId);
 
     // 2. Transcript çıkar
     const transcription = await getTranscription(jobData.audioPath);
 
-    // 3. Sonucu kaydet
+    // 3. Sonucu kaydet (flag + status + data)
     await markTranscribed(jobId, transcription);
-
-    // 4. Pipeline status güncelle
-    await updateJobStatus(jobId, PipelineStage.AudioTranscribed, { transcription: transcription.text });
 
     console.log(`[${WORKER_NAME}] Job ${jobId} transcription complete.`);
   } catch (err) {
-    await updateJobStatus(jobId, PipelineStage.Failed, { error: (err as any)?.message || 'Unknown error' });
+    // Hem status hem step flag "error" olmalı
+    await updateJobStatus(
+      jobId,
+      PipelineStage.Failed,
+      { 'pipelineSteps.transcribed': PipelineStepStatus.Error },
+      undefined,
+      { error: (err as any)?.message || 'Unknown error' }
+    );
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);
   }
 }

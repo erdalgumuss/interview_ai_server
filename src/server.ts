@@ -2,17 +2,19 @@
 
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
-import { analyzeVideoRoutes } from './routes/analyzeVideo.ts';
+import { applicationSubmissionRoutes } from './routes/applicationSubmission.ts';
 import { connectMongoDB } from './config/db.ts';
 import fastifyExpress from '@fastify/express';
 import cors from '@fastify/cors';
+import { setupQueueDashboard } from './monitor/queueDashboard.ts';
 
 dotenv.config();
 const server = Fastify({ logger: true, requestTimeout: 30000 });
 
 await server.register(fastifyExpress);
 await server.register(cors, { origin: '*' });
-await server.register(analyzeVideoRoutes, { prefix: '/api' });
+await server.register(applicationSubmissionRoutes, { prefix: '/api' });
+await setupQueueDashboard(server); // registerlardan sonra ekle
 
 server.get('/health', async () => ({ status: 'ok' }));
 

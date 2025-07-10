@@ -1,10 +1,11 @@
 import {
   getJobsToExtractAudio,
+  markAudioExtracting,
   markAudioExtracted,
-  PipelineStage
-} from '../modules/queue/jobStatusHelpers';
-import { extractAudioFromVideo } from '../modules/services/extractAudioService';
-import { updateJobStatus } from '../modules/queue/updateJobStatus';
+  PipelineStage,
+} from '../modules/queue/jobStatusHelpers.ts';
+import { extractAudioFromVideo } from '../modules/services/extractAudioService.ts';
+import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 const POLL_INTERVAL_MS = 2000;
 const WORKER_NAME = 'audioExtractorWorker';
@@ -13,21 +14,25 @@ async function processJob(jobId: string, jobData: any) {
   try {
     console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
 
-    // 1. Statüyü güncelle: Audio çıkartılıyor
-    await updateJobStatus(jobId, PipelineStage.Processing);
+    // 1. Statüyü güncelle: Audio extraction başlıyor (status + step flag)
+    await markAudioExtracting(jobId);
 
     // 2. Audio çıkart
     const audioPath = await extractAudioFromVideo(jobData.videoPath);
 
-    // 3. Sonuç: audio çıkarıldı flag'ini setle
+    // 3. Sonuç: audio çıkarıldı (status + step flag + path + timestamp)
     await markAudioExtracted(jobId, audioPath);
 
-    // 4. Pipeline status güncelle
-    await updateJobStatus(jobId, PipelineStage.AudioExtracted, { audioPath });
-
-    console.log(`[${WORKER_NAME}] Job ${jobId} audio extracted.`);
+    console.log(`[${WORKER_NAME}] Job ${jobId} audio extracted: ${audioPath}`);
   } catch (err) {
-    await updateJobStatus(jobId, PipelineStage.Failed, { error: (err as any)?.message || 'Unknown error' });
+    // 4. Hata durumunda status "failed" ve error mesajı
+    await updateJobStatus(
+      jobId,
+      PipelineStage.Failed,
+      { 'pipelineSteps.audio_extracted': 'error' },
+      undefined,
+      { error: (err as any)?.message || 'Unknown error' }
+    );
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);
   }
 }

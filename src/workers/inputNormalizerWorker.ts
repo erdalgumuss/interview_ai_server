@@ -2,9 +2,9 @@ import {
   getJobsToNormalize,
   markNormalized,
   PipelineStage
-} from '../modules/queue/jobStatusHelpers';
-import { normalizeAnalysisInput } from '../modules/utils/normalizeQuestionAnalysisInput';
-import { updateJobStatus } from '../modules/queue/updateJobStatus';
+} from '../modules/queue/jobStatusHelpers.ts';
+import { normalizeAnalysisInput } from '../modules/utils/normalizeQuestionAnalysisInput.ts';
+import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 const POLL_INTERVAL_MS = 2000;
 const WORKER_NAME = 'inputNormalizerWorker';

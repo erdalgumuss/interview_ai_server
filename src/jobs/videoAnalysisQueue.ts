@@ -1,6 +1,6 @@
 import { Queue, QueueEvents } from 'bullmq';
-import { redisConfig } from '../../config/redis.ts';
-import { updateJobStatus } from '../queue/updateJobStatus';
+import { redisConfig } from '../config/redis.ts';
+import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 // Queue oluşturuluyor
 export const videoAnalysisQueue = new Queue('videoAnalysisQueue', {

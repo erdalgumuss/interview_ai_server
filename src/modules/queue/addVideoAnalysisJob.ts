@@ -1,4 +1,4 @@
-import { videoAnalysisQueue } from '../videoAnalysis/videoAnalysisQueue.ts';
+import { videoAnalysisQueue } from '../../jobs/videoAnalysisQueue.ts';
 import { updateJobStatus } from './updateJobStatus.ts'; // Redis'e yazan util
 
 interface VideoAnalysisJobData {

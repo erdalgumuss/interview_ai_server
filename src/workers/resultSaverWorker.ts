@@ -1,5 +1,8 @@
+// src/workers/resultSaverWorker.ts
+
 import { getJobsToSave, markSaved } from '../modules/queue/jobStatusHelpers.ts';
-import { ApplicationSubmissionModel } from '../modules/models/applicationSubmission.model.ts';
+import { AnalysisJobModel } from '../modules/models/AnalysisJob.model.ts';
+import { VideoAnalysisModel } from '../modules/models/VideoAnalysis.model.ts';
 import { updateJobStatus } from '../modules/queue/updateJobStatus.ts';
 
 const POLL_INTERVAL_MS = 2000;
@@ -10,48 +13,47 @@ async function processJob(jobId: string, jobData: any) {
     console.log(`[${WORKER_NAME}] Processing job: ${jobId}`);
     await updateJobStatus(jobId, 'saving_results');
 
-    // Gerekli alanlar
+    // Gerekli AI sonuçlarını jobData'dan çıkar
     const {
-      applicationSubmissionId,
+      applicationId,
       videoResponseId,
-      transcription,
-      gptResult,
-      faceResult,
-      voiceResult,
-      communicationScore,
-      overallScore
+      questionId,
+      transcript,
+      sentiment,
+      keywordCoverage,
+      matchingScore,
+      faceScores,
+      voiceScores,
+      gptFeedback,
+      overallScore,
+      version
     } = jobData;
 
-    // Sonuçları ilgili videoResponse altına Mongo'da yaz
-    const updated = await ApplicationSubmissionModel.updateOne(
-      {
-        _id: applicationSubmissionId,
-        'videoResponses.videoResponseId': videoResponseId
-      },
-      {
-        $set: {
-          'videoResponses.$.aiAnalysis': {
-            transcriptionText: transcription,
-            gptResult: gptResult ? JSON.parse(gptResult) : {},
-            faceResult: faceResult ? JSON.parse(faceResult) : {},
-            voiceResult: voiceResult ? JSON.parse(voiceResult) : {},
-            overallScore: overallScore ? Number(overallScore) : null,
-            communicationScore: communicationScore ? Number(communicationScore) : null,
-            // Buraya ihtiyaca göre tüm skorlar ve çıktılar eklenebilir
-          },
-          'videoResponses.$.status': 'completed'
-        }
-      }
-    );
+    // 1) Analiz sonucunu VideoAnalysisModel koleksiyonuna kaydet
+    const created = await VideoAnalysisModel.create({
+      jobId,
+      applicationId,
+      videoResponseId,
+      questionId,
+      transcript,
+      sentiment,
+      keywordCoverage,
+      matchingScore,
+      faceScores,
+      voiceScores,
+      gptFeedback,
+      overallScore,
+      version: version || 'v1.0.0'
+    });
 
-    // Başarıyla kaydedildi mi kontrol
-    if (updated.modifiedCount > 0) {
-      await markSaved(jobId, videoResponseId);
-      await updateJobStatus(jobId, 'results_saved', { savedAnalysisId: videoResponseId });
-      console.log(`[${WORKER_NAME}] Job ${jobId} analysis saved to DB.`);
-    } else {
-      throw new Error('Mongo update failed or nothing modified');
-    }
+    // 2) İşin pipeline ve genel statusunu güncelle
+    await updateJobStatus(jobId, 'results_saved', { savedAnalysisId: String(created._id) });
+
+    // 3) (Opsiyonel) Mark as saved (queue logic)
+    await markSaved(jobId, videoResponseId);
+
+    console.log(`[${WORKER_NAME}] Job ${jobId} analysis saved to DB (analysisId: ${created._id}).`);
+
   } catch (err) {
     await updateJobStatus(jobId, 'failed', { error: (err as any)?.message || 'Unknown error' });
     console.error(`[${WORKER_NAME}] Job ${jobId} failed:`, err);

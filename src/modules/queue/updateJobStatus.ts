@@ -1,7 +1,5 @@
-// src/modules/queue/updateJobStatus.ts
-
 import Redis from 'ioredis';
-import { redisConfig } from '../../config/redis';
+import { redisConfig } from '../../config/redis.ts';
 
 const redis = new Redis(redisConfig);
 
@@ -13,12 +11,13 @@ export type AIAnalysisStatus = {
 };
 
 /**
- * Job durumunu günceller.
- * @param jobId   string (zorunlu)
- * @param status  string (pipeline genel status, örn: 'processing', 'completed')
- * @param pipelineSteps  Record<string, string> (adım adım pipeline status, örn: 'video_downloaded': 'completed')
- * @param aiStatus AIAnalysisStatus (face, voice, gpt gibi analizlerin durumu)
- * @param extra   Record<string, any> (diğer ek veri, opsiyonel)
+ * Redis'teki bir video analysis job'un statüsünü günceller.
+ * 
+ * @param jobId         - BullMQ job id'si
+ * @param status        - Genel pipeline status (örn: 'processing', 'completed', 'failed')
+ * @param pipelineSteps - Adım adım pipeline status güncelle (örn: {'pipelineSteps.video_downloaded': 'done'})
+ * @param aiStatus      - AI analizleri için adım adım durumlar
+ * @param extra         - Diğer ek veri
  */
 export async function updateJobStatus(
   jobId: string,
@@ -34,14 +33,14 @@ export async function updateJobStatus(
     updatedAt: new Date().toISOString(),
   };
 
-  // Pipeline step flag'leri
+  // Eğer pipelineSteps objesindeki anahtarlar flat gelirse (örn: 'pipelineSteps.audio_extracted'), doğrudan ekle.
   if (pipelineSteps) {
     for (const [step, value] of Object.entries(pipelineSteps)) {
       statusObj[step] = value;
     }
   }
 
-  // AI analiz statüleri JSON string olarak kaydediliyor
+  // AI analiz statüleri JSON olarak kaydediliyor
   if (aiStatus) {
     statusObj['ai'] = JSON.stringify(aiStatus);
   }
@@ -52,6 +51,13 @@ export async function updateJobStatus(
       statusObj[k] = typeof v === 'string' ? v : JSON.stringify(v);
     }
   }
+
+  // Null/undefined stringlerini kaydetmemek için filtrele
+  Object.keys(statusObj).forEach(key => {
+    if (statusObj[key] === undefined || statusObj[key] === null) {
+      delete statusObj[key];
+    }
+  });
 
   await redis.hset(`videoAnalysisJob:${jobId}`, statusObj);
 }
