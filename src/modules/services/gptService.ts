@@ -17,9 +17,7 @@ export interface AnalyzeInput {
 }
 
 export const analyzeWithGPT = async (
-  input: AnalyzeInput,
-  model = 'gpt-4o'
-): Promise<GPTResult> => {
+transcription: string, questionText: string, expectedAnswer: string, keywords: string[] | undefined, aiMetadata: Record<string, any> | undefined, input: AnalyzeInput, model = 'gpt-4o'): Promise<GPTResult> => {
   const prompt = buildGptPrompt(input);
 
   try {

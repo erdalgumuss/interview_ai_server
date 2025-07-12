@@ -2,7 +2,7 @@
 
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
-import { applicationSubmissionRoutes } from './routes/applicationSubmission.ts';
+import { interviewRecordRoutes } from './routes/interviewRecord.ts';
 import { connectMongoDB } from './config/db.ts';
 import fastifyExpress from '@fastify/express';
 import cors from '@fastify/cors';
@@ -13,7 +13,7 @@ const server = Fastify({ logger: true, requestTimeout: 30000 });
 
 await server.register(fastifyExpress);
 await server.register(cors, { origin: '*' });
-await server.register(applicationSubmissionRoutes, { prefix: '/api' });
+await server.register(interviewRecordRoutes, { prefix: '/api' });
 await setupQueueDashboard(server); // registerlardan sonra ekle
 
 server.get('/health', async () => ({ status: 'ok' }));

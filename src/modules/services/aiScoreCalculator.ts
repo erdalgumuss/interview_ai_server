@@ -1,14 +1,11 @@
 export const calculateFinalScores = ({
-  gptScore,
-  confidenceScore,
-  voiceConfidenceScore,
-  speechFluencyScore,
+    gptScore, confidenceScore, voiceConfidenceScore, speechFluencyScore,
 }: {
-  gptScore: number;
-  confidenceScore: number;
-  voiceConfidenceScore: number;
-  speechFluencyScore: number;
-}): {
+    gptScore: number;
+    confidenceScore: number;
+    voiceConfidenceScore: number;
+    speechFluencyScore: number;
+}, rest: any): {
   communicationScore: number;
   overallScore: number;
 } => {

@@ -1,13 +1,24 @@
 // src/jobs/index.ts
-import '../workers/videoDownloadWorker.ts';
-import '../workers/audioExtractorWorker.ts';
-import '../workers/transcriptionWorker.ts';
-import '../workers/inputNormalizerWorker.ts';
-import '../workers/gptAnalysisWorker.ts';
-import '../workers/scoreCalculatorWorker.ts';
-import '../workers/resultSaverWorker.ts';
-import '../workers/cleanupWorker.ts';
 
-// Not: Her worker dosyası sonsuz döngü ile poll ettiği için,
-// sadece import etmek yeterli, hepsi paralel başlar.
-console.log('All workers started.');
+// Her worker'ı import et
+import '../modules/worker/videoDownload.worker.ts';
+import '../modules/worker/audioExtract.worker.ts';
+import '../modules/worker/transcription.worker.ts';
+import '../modules/worker/normalizeInput.worker.ts';
+//import '../modules/worker/faceAnalysis.worker.ts';
+//import '../modules/worker/voiceAnalysis.worker.ts';
+//import '../modules/worker/gptAnalysis.worker.ts';
+//import '../modules/worker/scoreCalculate.worker.ts';
+//import '../modules/worker/resultsSave.worker.ts';
+
+// Eğer workerlar class olarak OOP şeklinde ise ve new ile başlatılıyorsa:
+//
+// import { VideoDownloadWorker } from '../modules/worker/videoDownload.worker.ts';
+// import { AudioExtractWorker } from '../modules/worker/audioExtract.worker.ts';
+// ... vs ...
+//
+// new VideoDownloadWorker();
+// new AudioExtractWorker();
+// ... vs ...
+
+console.log('🚀 All BullMQ workers started.');

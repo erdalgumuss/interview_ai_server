@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 
-export const downloadVideo = async (videoUrl: string): Promise<string> => {
+export const downloadVideo = async (videoUrl: string, pipelineId: any): Promise<string> => {
     console.log('Job data:', videoUrl);
 
   if (!videoUrl.startsWith('https://')) {

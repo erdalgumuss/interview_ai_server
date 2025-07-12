@@ -1,4 +1,5 @@
-import { VideoAnalysisJob } from '../../types/VideoAnalysisJob';
+// src/modules/utils/normalizeQuestionAnalysisInput.ts
+import { VideoAnalysisPipelineJob } from '../../types/VideoAnalysisPipelineJob.ts';
 
 interface GPTAnalysisInput {
   questionText: string;
@@ -6,42 +7,39 @@ interface GPTAnalysisInput {
   keywords: string[];
   complexityLevel: string;
   requiredSkills: string[];
-
   candidateSkills: string[];
   candidateExperience: string[];
   candidateEducation: string[];
-
   personalityScores: Record<string, number>;
   personalityFit: number | null;
-
   transcript: string;
 }
 
 export const normalizeAnalysisInput = (
-  jobData: VideoAnalysisJob,
+  pipeline: VideoAnalysisPipelineJob,
   transcription: string
 ): GPTAnalysisInput => {
-  const q = jobData.question;
-  const c = jobData.candidate;
-  const p = jobData.personalityTest?.scores || {};
+  const q = pipeline.question;
+  const c = pipeline.application.candidate;
+  const p = pipeline.personalityTest?.scores || {};
 
   return {
-    questionText: q.questionText ?? 'Not provided',
-    expectedAnswer: q.expectedAnswer ?? 'Not provided',
-    keywords: q.keywords ?? [],
-    complexityLevel: q.aiMetadata?.complexityLevel ?? 'Not specified',
-    requiredSkills: q.aiMetadata?.requiredSkills ?? [],
+    questionText: q?.questionText ?? 'Not provided',
+    expectedAnswer: q?.expectedAnswer ?? 'Not provided',
+    keywords: q?.keywords ?? [],
+    complexityLevel: q?.aiMetadata?.complexityLevel ?? 'Not specified',
+    requiredSkills: q?.aiMetadata?.requiredSkills ?? [],
 
-    candidateSkills: c.skills?.technical ?? [],
-    candidateExperience: c.experience?.map(
-      (e) => `${e.company}: ${e.responsibilities}`
+    candidateSkills: c?.skills?.technical ?? [],
+    candidateExperience: c?.experience?.map(
+      (e) => `${e.company}: ${e.position}`
     ) ?? [],
-    candidateEducation: c.education?.map(
+    candidateEducation: c?.education?.map(
       (e) => `${e.school} (${e.degree}, ${e.graduationYear})`
     ) ?? [],
 
     personalityScores: p,
-    personalityFit: jobData.personalityTest?.personalityFit ?? null,
+    personalityFit: pipeline.personalityTest?.personalityFit ?? null,
 
     transcript: transcription ?? '',
   };

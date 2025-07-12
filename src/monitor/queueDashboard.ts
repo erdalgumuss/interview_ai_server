@@ -1,18 +1,35 @@
-// src/monitor/queueDashboard.ts
 import { FastifyInstance } from 'fastify';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
 import { FastifyAdapter } from '@bull-board/fastify';
-import { videoAnalysisQueue } from '../jobs/videoAnalysisQueue.ts';
 
+import {
+  videoDownloadQueue, audioExtractQueue, transcriptionQueue,
+  faceAnalysisQueue, voiceAnalysisQueue, gptAnalysisQueue,
+  scoreCalculateQueue, resultsSaveQueue,
+  normalizeInputQueue
+} from '../config/queues.ts';
+
+// Bull Board dashboard'u başlatan fonksiyon
 export async function setupQueueDashboard(server: FastifyInstance) {
   const serverAdapter = new FastifyAdapter();
   serverAdapter.setBasePath('/admin/queues');
+
   createBullBoard({
-    queues: [new BullMQAdapter(videoAnalysisQueue)],
+    queues: [
+      new BullMQAdapter(videoDownloadQueue),
+      new BullMQAdapter(audioExtractQueue),
+      new BullMQAdapter(transcriptionQueue),
+      new BullMQAdapter(normalizeInputQueue),
+      new BullMQAdapter(faceAnalysisQueue),
+      new BullMQAdapter(voiceAnalysisQueue),
+      new BullMQAdapter(gptAnalysisQueue),
+      new BullMQAdapter(scoreCalculateQueue),
+      new BullMQAdapter(resultsSaveQueue),
+    ],
     serverAdapter,
   });
 
-  // Fastify ile Bull Board dashboard'u register et
+  // Bull Board dashboard'u Fastify'a entegre et
   server.register(serverAdapter.registerPlugin(), { prefix: '/admin/queues' });
 }

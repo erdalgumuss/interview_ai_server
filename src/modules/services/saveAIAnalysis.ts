@@ -1,7 +1,7 @@
 // src/modules/services/saveAIAnalysis.ts
 
-import { AnalysisJobModel } from '../models/AnalysisJob.model.ts';
-import { VideoAnalysisModel } from '../models/VideoAnalysis.model.ts';
+import { AnalysisJobModel } from '../../models/AnalysisJob.model.ts';
+import { VideoAnalysisModel } from '../../models/VideoAnalysis.model.ts';
 
 export const saveAIAnalysis = async (jobId: string, analysisResult: any) => {
   await VideoAnalysisModel.create({
