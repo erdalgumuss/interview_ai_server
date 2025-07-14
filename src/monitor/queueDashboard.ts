@@ -7,7 +7,7 @@ import {
   videoDownloadQueue, audioExtractQueue, transcriptionQueue,
   faceAnalysisQueue, voiceAnalysisQueue, gptAnalysisQueue,
   scoreCalculateQueue, resultsSaveQueue,
-  normalizeInputQueue
+  
 } from '../config/queues.ts';
 
 // Bull Board dashboard'u başlatan fonksiyon
@@ -20,7 +20,6 @@ export async function setupQueueDashboard(server: FastifyInstance) {
       new BullMQAdapter(videoDownloadQueue),
       new BullMQAdapter(audioExtractQueue),
       new BullMQAdapter(transcriptionQueue),
-      new BullMQAdapter(normalizeInputQueue),
       new BullMQAdapter(faceAnalysisQueue),
       new BullMQAdapter(voiceAnalysisQueue),
       new BullMQAdapter(gptAnalysisQueue),

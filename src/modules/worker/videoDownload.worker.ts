@@ -4,7 +4,7 @@ import { Job } from 'bullmq';
 import { BaseWorker } from './base/baseWorker.ts';
 import { VideoAnalysisPipelineJobModel } from '../../models/VideoAnalysisPipelineJob.model.ts';
 import { downloadVideo } from '../services/videoDownloadService.ts';
-import { audioExtractQueue } from '../../config/queues.ts';
+import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
 
 export class VideoDownloadWorker extends BaseWorker {
   constructor() {
@@ -29,12 +29,9 @@ export class VideoDownloadWorker extends BaseWorker {
       pipeline.pipelineSteps.video_downloaded.finishedAt = new Date().toISOString();
       pipeline.pipelineSteps.video_downloaded.details = { videoPath: localVideoPath };
       await pipeline.save();
-            // **BURASI ÖNEMLİ:**
-      // Audio extract kuyruğuna yeni iş ekle!
-      await audioExtractQueue.add('audioExtract', {
-        pipelineId,
-        videoPath: localVideoPath
-      });
+
+      // 🎯 Merkezi şekilde bir sonraki adımı başlat!
+      await scheduleNextStep(pipelineId, 'video_downloaded');
     } catch (err) {
       pipeline.pipelineSteps.video_downloaded.state = 'error';
       pipeline.pipelineSteps.video_downloaded.error = (err as Error).message;
@@ -44,5 +41,4 @@ export class VideoDownloadWorker extends BaseWorker {
   }
 }
 
-// Worker başlatılır
 new VideoDownloadWorker();

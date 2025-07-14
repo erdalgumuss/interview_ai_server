@@ -1,4 +1,6 @@
-import { AnalyzeInput } from '../services/gptService.ts';
+// src/modules/utils/buildGptPrompt.ts
+
+import { AnalyzeInput } from '../../types/aiAnalysis.types.ts';
 
 export const buildGptPrompt = (input: AnalyzeInput): string => {
   return `

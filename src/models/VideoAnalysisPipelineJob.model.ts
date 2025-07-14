@@ -30,7 +30,6 @@ pipelineSteps: {
     video_downloaded: PipelineStepSchema,
     audio_extracted: PipelineStepSchema,
     transcribed: PipelineStepSchema,
-    input_normalized: PipelineStepSchema,
     face_analyzed: PipelineStepSchema,
     voice_analyzed: PipelineStepSchema,
     gpt_analyzed: PipelineStepSchema,

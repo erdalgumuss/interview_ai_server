@@ -1,23 +1,17 @@
-import axios from 'axios';
-import { GPTResult } from '../../types/aiAnalysis.types.ts';
-import { buildGptPrompt } from '../utils/buildGptPrompt.ts';
+// src/modules/services/gptService.ts
 
-export interface AnalyzeInput {
-  questionText: string;
-  expectedAnswer: string;
-  keywords: string[];
-  complexityLevel: string;
-  requiredSkills: string[];
-  candidateSkills: string[];
-  candidateExperience: string[];
-  candidateEducation: string[];
-  personalityScores: Record<string, number>;
-  personalityFit?: number | null;
-  transcript: string;
-}
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { GPTResult, AnalyzeInput } from '../../types/aiAnalysis.types.ts'; // TİPLERİ TİPLER DOSYANDAN AL
+
+import { buildGptPrompt } from '../utils/buildGptPrompt.ts'; // Prompt fonksiyonunu dışarı al
 
 export const analyzeWithGPT = async (
-transcription: string, questionText: string, expectedAnswer: string, keywords: string[] | undefined, aiMetadata: Record<string, any> | undefined, input: AnalyzeInput, model = 'gpt-4o'): Promise<GPTResult> => {
+  input: AnalyzeInput,
+  model = 'gpt-4o'
+): Promise<GPTResult> => {
   const prompt = buildGptPrompt(input);
 
   try {
@@ -48,11 +42,11 @@ transcription: string, questionText: string, expectedAnswer: string, keywords: s
     const content: string = response.data.choices[0].message?.content;
     if (!content) throw new Error('Empty GPT response');
 
+    // Markdown, codeblock vs olursa temizle
     const cleaned = content.replace(/```json|```/g, '').trim();
-
     const parsed = JSON.parse(cleaned);
 
-    // Basit kontrol (dilersen Zod veya Joi ile schema doğrulama yapılabilir)
+    // Tip kontrolü (zorunlu alanlar için)
     if (
       typeof parsed.answerRelevanceScore !== 'number' ||
       typeof parsed.recommendation !== 'string'

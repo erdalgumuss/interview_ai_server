@@ -13,6 +13,7 @@ services:
       FACE_ANALYZER_URL: http://face_analyzer:8001
       VOICE_ANALYZER_URL: http://voice_analyzer:8002
       WHISPER_SERVICE_URL: http://whisper_service:8003
+      
     volumes:
       - .:/app
       - ./tmp:/tmp

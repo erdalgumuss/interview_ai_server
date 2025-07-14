@@ -1,3 +1,5 @@
+// src/types/VideoAnalysisPipelineJob.ts
+
 export type PipelineStepState = 'pending' | 'in_progress' | 'done' | 'error';
 
 export interface PipelineStep {
@@ -5,8 +7,21 @@ export interface PipelineStep {
   startedAt?: string;
   finishedAt?: string;
   error?: string;
-  details?: any;   // O adımın spesifik çıktısı (örn. faceScores, videoPath, vs.)
+  details?: any; // O adımın spesifik çıktısı (örn. faceScores, videoPath, vs.)
 }
+
+// Adım isimlerini merkezi ve type-safe olarak tanımla:
+export type PipelineStepKey =
+  | 'video_downloaded'
+  | 'audio_extracted'
+  | 'transcribed'
+  | 'face_analyzed'
+  | 'voice_analyzed'
+  | 'gpt_analyzed'
+  | 'final_scored'
+  | 'results_saved'
+
+export type PipelineStepMap = Record<PipelineStepKey, PipelineStep>;
 
 export interface VideoAnalysisPipelineJob {
   // Meta ve iş takibi
@@ -55,18 +70,7 @@ export interface VideoAnalysisPipelineJob {
     [key: string]: any;
   };
 
-  pipelineSteps: {
-    video_downloaded: PipelineStep;
-    audio_extracted:  PipelineStep;
-    transcribed:      PipelineStep;
-    face_analyzed:    PipelineStep;
-    voice_analyzed:   PipelineStep;
-    gpt_analyzed:     PipelineStep;
-    final_scored:     PipelineStep;
-    results_saved:    PipelineStep;
-    input_normalized: PipelineStep; // Yeni adım: Normalizasyon
-    // Gelecekte yeni adımlar da buraya eklenebilir
-  };
+  pipelineSteps: PipelineStepMap; // <- tip güvenli adım tanımı
 
   // Genel pipeline durumu ve yönetimi
   status: 'queued' | 'in_progress' | 'done' | 'failed';

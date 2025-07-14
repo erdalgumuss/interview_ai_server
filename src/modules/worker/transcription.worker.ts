@@ -2,7 +2,7 @@ import { Job } from 'bullmq';
 import { BaseWorker } from './base/baseWorker.ts';
 import { VideoAnalysisPipelineJobModel } from '../../models/VideoAnalysisPipelineJob.model.ts';
 import { getTranscription } from '../services/whisperService.ts';
-import { normalizeInputQueue } from '../../config/queues.ts';
+import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
 
 export class TranscriptionWorker extends BaseWorker {
   constructor() {
@@ -29,9 +29,8 @@ export class TranscriptionWorker extends BaseWorker {
       pipeline.pipelineSteps.transcribed.details = { summary: 'Transcription completed' };
       await pipeline.save();
      // 🚀 Burada bir sonraki adım için kuyruğa ekle!
-      await normalizeInputQueue.add('normalize-input', {
-        pipelineId
-      });
+         await scheduleNextStep(pipelineId, 'transcribed');
+
 
     } catch (err) {
       pipeline.pipelineSteps.transcribed.state = 'error';

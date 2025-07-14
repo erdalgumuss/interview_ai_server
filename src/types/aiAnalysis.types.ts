@@ -22,3 +22,17 @@ export interface VoiceResult {
     averagePause: number;
     totalPauses: number;
 }
+
+export interface AnalyzeInput {
+  questionText: string;
+  expectedAnswer: string;
+  keywords: string[];
+  complexityLevel: string;
+  requiredSkills: string[];
+  candidateSkills: string[];
+  candidateExperience: string[];
+  candidateEducation: string[];
+  personalityScores: Record<string, number>;
+  personalityFit?: number | null;
+  transcript: string;
+}

@@ -77,10 +77,10 @@ export const getTranscription = async (filePath: string): Promise<WhisperRespons
 
     return {
       text,
-      words: fallbackWords,
-      segments,
+      //words: fallbackWords,
+      //segments,
       language,
-      duration
+      //duration
     };
   } catch (error: any) {
     const msg = error.response?.data?.error?.message || error.message;

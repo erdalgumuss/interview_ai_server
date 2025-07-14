@@ -4,7 +4,7 @@ import { Job } from 'bullmq';
 import { BaseWorker } from './base/baseWorker.ts';
 import { VideoAnalysisPipelineJobModel } from '../../models/VideoAnalysisPipelineJob.model.ts';
 import { extractAudioFromVideo } from '../services/extractAudioService.ts';
-import { transcriptionQueue } from '../../config/queues.ts';
+import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
 
 export class AudioExtractWorker extends BaseWorker {
   constructor() {
@@ -30,10 +30,8 @@ export class AudioExtractWorker extends BaseWorker {
       pipeline.pipelineSteps.audio_extracted.details = { audioPath };
       await pipeline.save();
             // 🎯 Burada bir sonraki adım için kuyruğa ekle!
-      await transcriptionQueue.add('transcription', {
-        pipelineId,
-        audioPath
-      });
+     await scheduleNextStep(pipelineId, 'audio_extracted');
+
 
     } catch (err) {
       pipeline.pipelineSteps.audio_extracted.state = 'error';
