@@ -10,7 +10,7 @@ Kodun çıktısı tamamen öngörülebilir ve test edilebilir (MVP’ye uygun).
 Genişletme: Dışarıdan logger veya debug/verbose parametre ile kolayca geliştirilir.
 
 Uzun vadede: Çok büyük videolar veya paralel çalışmaya göre optimize edilebilir."""
-
+# ai_services/face_analyzer/services/face_video.py
 
 
 import time

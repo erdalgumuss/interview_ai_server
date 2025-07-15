@@ -1,4 +1,4 @@
-import { analyzeFaceAndGestures } from './faceAnalysisService.ts';
+import { analyzeFaceAndGestures } from './faceAnalyzerService.ts';
 import { analyzeVoiceProsody } from './voiceProsodyService.ts';
 import { analyzeWithGPT } from './gptService.ts';
 

@@ -63,6 +63,13 @@ services:
     environment:
       PYTHONUNBUFFERED: 1
       PORT: 8001
+  face_analyzer_worker:
+    build: ./ai_services/face_analyzer
+    command: python worker.py
+    working_dir: /app
+    depends_on: [redis, face_analyzer]
+    volumes:
+    - ./tmp:/tmp
 
   # voice_analyzer:
   #   build: ./ai_services/voice_analyzer

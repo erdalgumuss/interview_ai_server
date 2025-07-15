@@ -1,3 +1,4 @@
+# ai_services/face_analyzer/queue_manager.py
 import redis
 import uuid
 import os
@@ -19,7 +20,7 @@ def enqueue_job(data: dict) -> str:
     redis_data = {"status": "queued"}
     redis_data.update({k: str(v) for k, v in data.items()})
     r.hset(f"face_job:{job_id}", mapping=redis_data)
-    r.lpush("face_analysis_queue", job_id)
+    r.lpush("face_analaysis_python", job_id)
     return job_id
 
 def get_job_status(job_id: str) -> dict:

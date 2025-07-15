@@ -1,8 +1,8 @@
+# ai_services/face_analyzer/worker.py
 import time
-import redis
 import os
 from services.face_video import analyze_face_video
-from queue_manager import update_job_status, r  # Redis objesini ortak kullan
+from queue_manager import r
 
 def process_video(data):
     """
@@ -20,12 +20,20 @@ def process_video(data):
         max_frames=int(data.get(b"max_frames", b"30").decode() if data.get(b"max_frames") else 30)
     )
     return result
+def update_job_status(job_id: str, status: str, extra: dict = None):
+    """
+    Bir işin durumunu ve opsiyonel ekstra bilgileri günceller.
+    """
+    d = {"status": status}
+    if extra:
+        d.update({k: str(v) for k, v in extra.items()})
+    r.hset(f"face_job:{job_id}", mapping=d)
 
 def worker_loop():
     print("🔄 Worker kuyruğu dinliyor...")
     while True:
         # Kuyruğun başından iş çek
-        job_id = r.brpoplpush("face_analysis_queue", "face_analysis_processing", timeout=0)
+        job_id = r.brpoplpush("face_analaysis_python", "face_analysis_processing", timeout=0)
         if job_id:
             job_id = job_id.decode()
             print(f"🎬 İş alındı: {job_id}")

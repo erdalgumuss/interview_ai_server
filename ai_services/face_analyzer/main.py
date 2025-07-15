@@ -21,11 +21,18 @@ Sonuç üretildiğinde, client veya ana server iş bitti mi diye status’a baka
 Kritik durumlarda Webhook/event tetikleme de eklenebilir (örn. job bittiğinde başka sisteme haber ver).
 """
 
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from queue_manager import enqueue_job, get_job_status
 import os
+
+JOB_STATUSES = [
+    "queued",
+    "processing",
+    "waiting_result",  # Eğer poller bekletiyorsa
+    "done",
+    "failed",
+]
 
 app = FastAPI(
     title="Face Analyzer Service",
@@ -33,17 +40,26 @@ app = FastAPI(
     version=os.getenv("APP_VERSION", "0.1.0")
 )
 
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"]
+)
 
 @app.post("/face/analyze")
 async def analyze_face(request: Request):
     data = await request.json()
-    job_id = enqueue_job(data)  # Sadece kuyruğa atıyor!
+    job_id = enqueue_job(data)
+    # İlk başta "queued" döndür, ana backend ile uyumlu
     return {"jobId": job_id, "status": "queued"}
 
 @app.get("/face/status/{job_id}")
 def status(job_id: str):
-    return get_job_status(job_id)
+    stat = get_job_status(job_id)
+    if "status" not in stat or stat["status"] not in JOB_STATUSES:
+        return {"status": "unknown"}
+    return stat
+
 
 @app.get("/health")
 def health():

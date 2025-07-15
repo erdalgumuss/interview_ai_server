@@ -1,8 +1,9 @@
+// src/modules/worker/faceAnalysis.worker.ts
+
 import { Job } from 'bullmq';
 import { BaseWorker } from './base/baseWorker.ts';
 import { VideoAnalysisPipelineJobModel } from '../../models/VideoAnalysisPipelineJob.model.ts';
-import { analyzeFaceAndGestures } from '../services/faceAnalysisService.ts'; // mock/real service
-import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
+import { requestFaceAnalysis } from '../services/faceAnalyzerService.ts'; // Sadece analiz başlatır!
 
 export class FaceAnalysisWorker extends BaseWorker {
   constructor() {
@@ -22,17 +23,16 @@ export class FaceAnalysisWorker extends BaseWorker {
     await pipeline.save();
 
     try {
-      // Burada gerçek servise geçiş yapabilirsin
-      const analysisResult = await analyzeFaceAndGestures(pipeline.videoPath);
+      // 1. Python mikroservisine analiz isteği gönder — sadece job başlat!
+      const jobId = await requestFaceAnalysis(pipeline.videoPath);
 
-      pipeline.faceScores = analysisResult; // Detayları burada tutabilirsin
-      pipeline.pipelineSteps.face_analyzed.state = 'done';
-      pipeline.pipelineSteps.face_analyzed.finishedAt = new Date().toISOString();
-      pipeline.pipelineSteps.face_analyzed.details = { ...analysisResult };
+      // 2. JobId'yi detaylara kaydet, state'i "waiting_result" olarak işaretle
+      pipeline.pipelineSteps.face_analyzed.state = 'waiting';
+      pipeline.pipelineSteps.face_analyzed.details = { faceAnalysisJobId: jobId };
       await pipeline.save();
 
-      // Sonraki adıma geçiş için scheduler'ı çağır
-      await scheduleNextStep(pipelineId, 'face_analyzed');
+      // 3. Sonucu beklemiyoruz! Scheduler bu işi üstlenecek
+      // (Burada scheduleNextStep ÇAĞRILMAZ! Çünkü analiz bitmedi)
     } catch (err) {
       pipeline.pipelineSteps.face_analyzed.state = 'error';
       pipeline.pipelineSteps.face_analyzed.error = (err as Error).message;
@@ -42,5 +42,17 @@ export class FaceAnalysisWorker extends BaseWorker {
   }
 }
 
-// Worker başlat
+// Worker başlatılır:
 new FaceAnalysisWorker();
+
+import { pollFaceAnalysisResults } from '../../schedulers/faceAnalysisResultPoller.ts';
+
+const POLLER_INTERVAL_MS = Number(process.env.FACE_POLLER_INTERVAL_MS) || 10_000;
+
+// Worker başlatılır:
+new FaceAnalysisWorker();
+
+// Poller da burada başlar:
+setInterval(pollFaceAnalysisResults, POLLER_INTERVAL_MS);
+
+console.log(`[FaceAnalysisWorker] Scheduler (poller) da başlatıldı.`);

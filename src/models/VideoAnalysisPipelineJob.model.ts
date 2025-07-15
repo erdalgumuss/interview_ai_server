@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import type { VideoAnalysisPipelineJob, PipelineStep } from '../types/VideoAnalysisPipelineJob.ts';
 
 const PipelineStepSchema = new Schema<PipelineStep>({
-  state:      { type: String, enum: ['pending','in_progress','done','error'], required: true },
+  state:      { type: String, enum: ['pending','in_progress', 'waiting', 'done','error'], required: true },
   startedAt:  { type: String },
   finishedAt: { type: String },
   error:      { type: String },

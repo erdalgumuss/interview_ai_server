@@ -1,6 +1,6 @@
 // src/types/VideoAnalysisPipelineJob.ts
 
-export type PipelineStepState = 'pending' | 'in_progress' | 'done' | 'error';
+export type PipelineStepState = 'pending' | 'in_progress' | 'done' | 'error' | 'waiting';
 
 export interface PipelineStep {
   state: PipelineStepState;
