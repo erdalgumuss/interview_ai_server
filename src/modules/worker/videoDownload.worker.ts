@@ -8,7 +8,7 @@ import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
 
 export class VideoDownloadWorker extends BaseWorker {
   constructor() {
-    super('video-download-queue');
+    super('video-download-queue', { concurrency: 10 });
   }
 
   protected async handleJob(job: Job): Promise<void> {

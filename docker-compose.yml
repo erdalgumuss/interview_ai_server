@@ -71,17 +71,23 @@ services:
     volumes:
     - ./tmp:/tmp
 
-  # voice_analyzer:
-  #   build: ./ai_services/voice_analyzer
-  #   command: uvicorn main:app --host 0.0.0.0 --port 8002
-  #   ports:
-  #     - "8002:8002"
-  #   volumes:
-  #     - ./tmp:/tmp
-  #   environment:
-  #     PYTHONUNBUFFERED: 1
-  #     PORT: 8002
-
+  voice_analyzer:
+    build: ./ai_services/voice_analyzer
+    command: uvicorn main:app --host 0.0.0.0 --port 8002
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./tmp:/tmp
+    environment:
+      PYTHONUNBUFFERED: 1
+      PORT: 8002
+  voice_analyzer_worker:
+    build: ./ai_services/voice_analyzer
+    command: python worker.py
+    working_dir: /app
+    depends_on: [redis, voice_analyzer]
+    volumes:
+    - ./tmp:/tmp
   # whisper_service:
   #   build: ./ai_services/whisper_service
   #   command: uvicorn main:app --host 0.0.0.0 --port 8003

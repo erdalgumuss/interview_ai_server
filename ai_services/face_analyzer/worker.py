@@ -1,6 +1,5 @@
 # ai_services/face_analyzer/worker.py
 import time
-import os
 from services.face_video import analyze_face_video
 from queue_manager import r
 

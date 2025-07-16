@@ -1,8 +1,7 @@
 import { Job } from 'bullmq';
 import { BaseWorker } from './base/baseWorker.ts';
 import { VideoAnalysisPipelineJobModel } from '../../models/VideoAnalysisPipelineJob.model.ts';
-import { analyzeVoiceProsody } from '../services/voiceProsodyService.ts'; // mock/real
-import { scheduleNextStep } from '../../schedulers/pipelineScheduler.ts';
+import { requestVoiceAnalysis } from '../services/voiceAnalyzerService.ts';
 
 export class VoiceAnalysisWorker extends BaseWorker {
   constructor() {
@@ -22,18 +21,12 @@ export class VoiceAnalysisWorker extends BaseWorker {
     await pipeline.save();
 
     try {
-      // Transcriptiondan kelime verisi çıkar (yoksa boş array)
-      const words = pipeline.transcription?.words || [];
-      const voiceResult = await analyzeVoiceProsody(pipeline.audioPath, words);
+      const jobId = await requestVoiceAnalysis(pipeline.audioPath);
 
-      pipeline.voiceScores = voiceResult;
-      pipeline.pipelineSteps.voice_analyzed.state = 'done';
-      pipeline.pipelineSteps.voice_analyzed.finishedAt = new Date().toISOString();
-      pipeline.pipelineSteps.voice_analyzed.details = { ...voiceResult };
+      pipeline.pipelineSteps.voice_analyzed.state = 'waiting';
+      pipeline.pipelineSteps.voice_analyzed.details = { voiceAnalysisJobId: jobId };
       await pipeline.save();
-
-      // Sonraki adıma geçişi scheduler'a bırak
-      await scheduleNextStep(pipelineId, 'voice_analyzed');
+      // Sonucu beklemiyoruz!
     } catch (err) {
       pipeline.pipelineSteps.voice_analyzed.state = 'error';
       pipeline.pipelineSteps.voice_analyzed.error = (err as Error).message;
@@ -44,3 +37,13 @@ export class VoiceAnalysisWorker extends BaseWorker {
 }
 
 new VoiceAnalysisWorker();
+import { pollVoiceAnalysisResults } from '../../schedulers/voiceAnalysisResultPoller.ts';
+
+const POLLER_INTERVAL_MS = Number(process.env.FACE_POLLER_INTERVAL_MS) || 10_000;
+
+// Worker başlatılır:
+
+// Poller da burada başlar:
+setInterval(pollVoiceAnalysisResults, POLLER_INTERVAL_MS);
+
+console.log(`[VoiceAnalysisWorker] Scheduler (poller) da başlatıldı.`);

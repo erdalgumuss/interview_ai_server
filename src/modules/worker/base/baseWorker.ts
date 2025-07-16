@@ -6,9 +6,11 @@ import { connectMongoDB } from '../../../config/db.ts';
 
 export abstract class BaseWorker {
   private queueName: string;
+  private concurrency: number;
 
-  constructor(queueName: string) {
+  constructor(queueName: string, options?: { concurrency?: number }) {
     this.queueName = queueName;
+    this.concurrency = options?.concurrency ?? 1; // default: 1
     this.initialize();
   }
 
@@ -17,7 +19,10 @@ export abstract class BaseWorker {
     const worker = new Worker(
       this.queueName,
       async (job: Job) => this.handleJob(job),
-      { connection: redisConfig }
+      {
+        connection: redisConfig,
+        concurrency: this.concurrency,   // 👈
+      }
     );
 
     process.on('SIGINT', async () => {
