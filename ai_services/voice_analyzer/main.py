@@ -1,7 +1,6 @@
-# main.py
-
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from models.input import VoiceAnalysisInput   # 👈
 from queue_manager import enqueue_job, get_job_status
 import os
 
@@ -18,9 +17,9 @@ app.add_middleware(
 )
 
 @app.post("/voice/analyze")
-async def analyze_voice(request: Request):
-    data = await request.json()
-    job_id = enqueue_job(data)
+async def analyze_voice(input: VoiceAnalysisInput):  # 👈 Tip belirle!
+    # input: Pydantic model, otomatik validasyon + OpenAPI doc
+    job_id = enqueue_job(input.dict())
     return {"jobId": job_id, "status": "queued"}
 
 @app.get("/voice/status/{job_id}")
