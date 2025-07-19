@@ -21,7 +21,7 @@ export async function pollFaceAnalysisResults() {
         pipeline.faceScores = result;
         pipeline.pipelineSteps.face_analyzed.state = 'done';
         pipeline.pipelineSteps.face_analyzed.finishedAt = new Date().toISOString();
-        pipeline.pipelineSteps.face_analyzed.details = { ...result, faceAnalysisJobId: jobId };
+        pipeline.pipelineSteps.face_analyzed.details = {  faceAnalysisJobId: jobId };
         await pipeline.save();
         await scheduleNextStep(pipeline.id.toString(), 'face_analyzed');
       } else if (result.status === 'failed') {
@@ -38,4 +38,4 @@ export async function pollFaceAnalysisResults() {
 }
 
 // Cron ile veya app başında:
-setInterval(pollFaceAnalysisResults, 10_000); // 10 saniyede bir kontrol et
+//setInterval(pollFaceAnalysisResults, 10_000); // 10 saniyede bir kontrol et

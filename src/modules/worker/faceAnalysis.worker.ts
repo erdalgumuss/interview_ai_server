@@ -48,9 +48,6 @@ new FaceAnalysisWorker();
 import { pollFaceAnalysisResults } from '../../schedulers/faceAnalysisResultPoller.ts';
 
 const POLLER_INTERVAL_MS = Number(process.env.FACE_POLLER_INTERVAL_MS) || 10_000;
-
-// Worker başlatılır:
-
 // Poller da burada başlar:
 setInterval(pollFaceAnalysisResults, POLLER_INTERVAL_MS);
 

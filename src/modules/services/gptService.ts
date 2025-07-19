@@ -1,17 +1,14 @@
-// src/modules/services/gptService.ts
-
 import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { GPTResult, AnalyzeInput } from '../../types/aiAnalysis.types.ts'; // TİPLERİ TİPLER DOSYANDAN AL
-
+import { GPTAnalysisInput, GPTAnalysisOutput } from '../../types/aiAnalysis.types.ts';
 import { buildGptPrompt } from '../utils/buildGptPrompt.ts'; // Prompt fonksiyonunu dışarı al
 
 export const analyzeWithGPT = async (
-  input: AnalyzeInput,
+  input: GPTAnalysisInput,
   model = 'gpt-4o'
-): Promise<GPTResult> => {
+): Promise<GPTAnalysisOutput> => {
   const prompt = buildGptPrompt(input);
 
   try {
@@ -42,11 +39,11 @@ export const analyzeWithGPT = async (
     const content: string = response.data.choices[0].message?.content;
     if (!content) throw new Error('Empty GPT response');
 
-    // Markdown, codeblock vs olursa temizle
+    // Olası codeblock ve markdown temizliği
     const cleaned = content.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    const parsed: GPTAnalysisOutput = JSON.parse(cleaned);
 
-    // Tip kontrolü (zorunlu alanlar için)
+    // Basit zorunlu alan kontrolü (gerekirse özelleştir)
     if (
       typeof parsed.answerRelevanceScore !== 'number' ||
       typeof parsed.recommendation !== 'string'
