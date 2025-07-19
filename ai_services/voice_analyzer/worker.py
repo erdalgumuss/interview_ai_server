@@ -22,7 +22,7 @@ def process_audio(data):
             provider=input_model.provider  # Diğer parametreleri de aktarabilirsin
         )
         output_model = VoiceAnalysisOutput(**result)
-        return output_model.dict()
+        return output_model.model_dump()
     except Exception as e:
         return {"error": str(e)}
 

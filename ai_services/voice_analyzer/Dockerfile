@@ -4,10 +4,10 @@ FROM python:3.10-slim
 # 2. Sistem bağımlılıklarını yükle (gerekirse ffmpeg, libsndfile, sox, vs. eklenebilir)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      build-essential \
-      gcc \
-      libsndfile1 \
-      && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    gcc \
+    libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
 
 # 3. Çalışma dizini
 WORKDIR /app
@@ -15,6 +15,7 @@ WORKDIR /app
 # 4. Python bağımlılıkları
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN apt-get update && apt-get install -y ffmpeg
 
 # 5. Kod dosyalarını ekle
 COPY . .
