@@ -7,6 +7,7 @@ import {
   videoDownloadQueue, audioExtractQueue, transcriptionQueue,
   faceAnalysisQueue, voiceAnalysisQueue, gptAnalysisQueue,
   scoreCalculateQueue, resultsSaveQueue,
+  questionAnalyzedQueue,
   
 } from '../config/queues.ts';
 
@@ -22,6 +23,7 @@ export async function setupQueueDashboard(server: FastifyInstance) {
       new BullMQAdapter(transcriptionQueue),
       new BullMQAdapter(faceAnalysisQueue),
       new BullMQAdapter(voiceAnalysisQueue),
+      new BullMQAdapter(questionAnalyzedQueue),
       new BullMQAdapter(gptAnalysisQueue),
       new BullMQAdapter(scoreCalculateQueue),
       new BullMQAdapter(resultsSaveQueue),

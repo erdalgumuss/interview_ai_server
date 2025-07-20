@@ -17,6 +17,7 @@ export type PipelineStepKey =
   | 'transcribed'
   | 'face_analyzed'
   | 'voice_analyzed'
+  | 'question_analyzed'
   | 'gpt_analyzed'
   | 'final_scored'
   | 'results_saved'
@@ -89,6 +90,7 @@ export interface VideoAnalysisPipelineJob {
   aiResult?: any;
   faceScores?: any;
   voiceScores?: any;
+  questionAIResult?: any; // Soru-yanıt AI analizi sonucu
   gptFeedback?: any;
   overallScore?: number;
   savedAnalysisId?: string;

@@ -13,3 +13,4 @@ export const gptAnalysisQueue     = new Queue('gpt-analysis-queue',    { connect
 export const scoreCalculateQueue  = new Queue('score-calculate-queue', { connection: redisConfig });
 export const resultsSaveQueue     = new Queue('results-save-queue',    { connection: redisConfig });
 export const cleanupQueue         = new Queue('cleanup-queue',        { connection: redisConfig });
+export const questionAnalyzedQueue = new Queue('question-analyzed-queue', { connection: redisConfig });
