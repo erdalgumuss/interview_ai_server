@@ -24,7 +24,7 @@ const VideoAnalysisPipelineJobSchema = new Schema<VideoAnalysisPipelineJob>({
   expectedAnswer: { type: String },
   keywords:     { type: [String] },
   aiMetadata:   { type: Schema.Types.Mixed },
-
+  interviewRecordId: { type: String }, // Mülakat kaydı ID'si
 pipelineSteps: {
   type: {
     video_downloaded: PipelineStepSchema,
@@ -34,7 +34,6 @@ pipelineSteps: {
     voice_analyzed: PipelineStepSchema,
     question_analyzed: PipelineStepSchema, // Yeni adım eklendi
     question_evaluated: PipelineStepSchema,
-    final_scored: PipelineStepSchema,
     results_saved: PipelineStepSchema
   },
   required: true,
@@ -46,7 +45,6 @@ pipelineSteps: {
     face_analyzed: { state: 'pending' },
     voice_analyzed: { state: 'pending' },
     question_evaluated: { state: 'pending' },
-    final_scored: { state: 'pending' },
     results_saved: { state: 'pending' },
     question_analyzed: { state: 'pending' } // Yeni adım eklendi
   }),

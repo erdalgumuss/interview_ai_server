@@ -12,7 +12,6 @@ export const stepTransitionMap: Record<PipelineStepKey, {
   face_analyzed:      { nextStep: 'voice_analyzed',  queueName: 'voiceAnalysisQueue', jobName: 'analyzeVoice' },
   voice_analyzed:     { nextStep: 'question_analyzed',queueName: 'questionAnalyzedQueue', jobName: 'analyzeQuestion' },
   question_analyzed:  { nextStep: 'question_evaluated',    queueName: 'questionEvaluationQueue', jobName: 'analyzeEvaluation' },
-  question_evaluated: { nextStep: 'final_scored',    queueName: 'scoreCalculateQueue', jobName: 'calculateScore' },
-  final_scored:       { nextStep: 'results_saved',   queueName: 'resultsSaveQueue', jobName: 'saveResults' },
+  question_evaluated: { nextStep: 'results_saved',   queueName: 'resultsSaveQueue', jobName: 'saveResults' },       
   results_saved:      {},
 };

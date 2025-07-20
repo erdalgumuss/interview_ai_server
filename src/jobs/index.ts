@@ -9,8 +9,8 @@ import '../modules/worker/faceAnalysis.worker.ts';
 import '../modules/worker/voiceAnalysis.worker.ts';
 import '../modules/worker/questionAnswerAI.worker.ts';
 import '../modules/worker/questionEvaluation.worker.ts';
-import '../modules/worker/scoreCalculate.worker.ts';
-//import '../modules/worker/resultSave.worker.ts';
+//import '../modules/worker/scoreCalculate.worker.ts';
+import '../modules/worker/resultSave.worker.ts';
 
 // Eğer workerlar class olarak OOP şeklinde ise ve new ile başlatılıyorsa:
 //

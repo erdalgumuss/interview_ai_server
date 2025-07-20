@@ -12,6 +12,7 @@ import type {
   ScoreWeights,
   LLMGeneralAssessment
 } from '../../types/AnalysisScore.ts';
+import { calculateCleanLLMScore } from '../academic/llmScoreService.ts';
 
 export class QuestionEvaluationWorker extends BaseWorker {
   constructor() {
@@ -28,7 +29,7 @@ export class QuestionEvaluationWorker extends BaseWorker {
     // 1. Analiz skorlarını topla ve normalize et
     const cleanFaceScore = calculateCleanFaceScore(pipeline.faceScores);
     const cleanVoiceScore = calculateCleanVoiceScore(pipeline.voiceScores);
-    const llmScore = pipeline.questionAIResult; // LLM çıktısı (önceden alınmış)
+    const llmScore = calculateCleanLLMScore(pipeline.questionAIResult) ;// LLM çıktısı (önceden alınmış)
 
     // 2. Kullanıcıdan gelen veya default ağırlıkları ayarla
     const weights: ScoreWeights = scoreWeights || { face: 0.2, voice: 0.2, llm: 0.6 };
@@ -72,7 +73,7 @@ export class QuestionEvaluationWorker extends BaseWorker {
     pipeline.evaluationResult = evaluationResult;
     await pipeline.save();
 
-    await scheduleNextStep(pipelineId, 'final_scored');
+    await scheduleNextStep(pipelineId, 'question_evaluated');
   }
 }
 

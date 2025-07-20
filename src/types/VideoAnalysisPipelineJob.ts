@@ -19,7 +19,6 @@ export type PipelineStepKey =
   | 'voice_analyzed'
   | 'question_analyzed'
   | 'question_evaluated' // Yeni adım eklendi
-  | 'final_scored'
   | 'results_saved'
 
 export type PipelineStepMap = Record<PipelineStepKey, PipelineStep>;
@@ -60,6 +59,7 @@ export interface VideoAnalysisPipelineJob {
   duration: number;
   videoResponseId: string;
   videoUrl: string;
+  interviewRecordId?: any; // Mülakat kaydı ID'si
 
   // AI analiz inputları ve pipeline steps
   questionText: string;

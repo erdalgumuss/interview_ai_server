@@ -84,6 +84,16 @@ export interface CleanVoiceAnalysisScore {
   warnings: string[];
 }
 
+export interface CleanLLMScore {
+  overallLLMScore: number;                // 0-100, normalize ana puan
+  details: Record<string, number>;        // her alt parametrenin normalize edilmiş skoru
+  warnings: string[];
+  strengths?: string[];
+  weaknesses?: string[];
+  recommendation?: string;
+  notes?: string;
+  [key: string]: any; // esnek ek alan
+}
 
 
 // Soru-LLM Analizi (Soruya Verilen Yanıtın Değerlendirmesi)
@@ -123,7 +133,7 @@ export interface QuestionEvaluationResult {
   };
   faceScore: CleanFaceAnalysisScore;
   voiceScore: CleanVoiceAnalysisScore;
-  llmScore: QuestionLLMAnalysisScore;
+  llmScore: CleanLLMScore;
   isReliable: boolean;
   warnings: string[];
   llmCommentary?: LLMGeneralAssessment;

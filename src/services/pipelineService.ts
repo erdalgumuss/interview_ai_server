@@ -16,7 +16,6 @@ export async function createPipelineJobAndQueue(data: Partial<VideoAnalysisPipel
     voice_analyzed: { state: 'pending' },
     question_analyzed: { state: 'pending' }, // Yeni adım eklendi
     question_evaluated: { state: 'pending' },
-    final_scored: { state: 'pending' },
     results_saved: { state: 'pending' }
   };
 

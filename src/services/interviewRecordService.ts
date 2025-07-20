@@ -28,6 +28,7 @@ export async function createInterviewRecordAndPipelines({
     const pipelineJob = await createPipelineJobAndQueue({
       meta,
       application,
+      
       interviewId: interview.id,
       interviewTitle: interview.title,
       questionId: q.id,
@@ -39,7 +40,6 @@ export async function createInterviewRecordAndPipelines({
       aiMetadata: q.aiMetadata,
 videoResponseId: q.video?.videoResponseId,
 videoUrl: q.video?.url,
-
       applicationId: application.id,
       interviewRecordId: interviewRecord._id
     });

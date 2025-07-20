@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import type { InterviewRecord } from '../types/InterviewRecord.ts';
 
-const InterviewRecordSchema = new Schema<InterviewRecord>({
+export const InterviewRecordSchema = new Schema<InterviewRecord>({
   meta:         { type: Schema.Types.Mixed, required: true },
   application:  { type: Schema.Types.Mixed, required: true },
   interview: {
@@ -17,7 +17,8 @@ const InterviewRecordSchema = new Schema<InterviewRecord>({
       aiMetadata:   { type: Schema.Types.Mixed },
       videoResponseId: { type: String },
       videoUrl:     { type: String },
-      pipelineId:   { type: String }
+      pipelineId:   { type: String },
+      analysis: {type: Schema.Types.Mixed, default: {} },
     }]
   },
   overallScore: { type: Number },

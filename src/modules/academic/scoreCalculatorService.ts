@@ -1,7 +1,7 @@
 import type {
   CleanFaceAnalysisScore,
   CleanVoiceAnalysisScore,
-  QuestionLLMAnalysisScore,
+    CleanLLMScore,
   ScoreWeights,
   QuestionEvaluationResult,
   LLMGeneralAssessment
@@ -17,30 +17,7 @@ function normalizeWeights(weights: ScoreWeights): ScoreWeights {
   };
 }
 
-// LLM Score (overall) için otomatik ağırlık hesabı
-function calcOverallLLMScore(llm: QuestionLLMAnalysisScore): number {
-  // Varsayılan ağırlıklar (dışarıdan alabilir, pozisyona göre esnetilebilir)
-  const defaultWeights = {
-    answerRelevanceScore: 0.35,
-    keywordCoverageScore: 0.15,
-    technicalScore: 0.15,
-    clarityScore: 0.15,
-    completenessScore: 0.10,
-    initiativeScore: 0.10,
-  };
-  // Her parametre varsa katkı sağlar
-  let sum = 0;
-  let used = 0;
-  Object.entries(defaultWeights).forEach(([key, w]) => {
-    const v = typeof llm[key] === 'number' ? llm[key] : null;
-    if (v !== null && v !== undefined) {
-      sum += (v as number) * w;
-      used += w;
-    }
-  });
-  // Kullanılan ağırlık toplamı <1 olabilir (bazı parametreler yoksa), normalleştir
-  return used > 0 ? Math.round(sum / used) : 0;
-}
+
 
 /**
  * Final soru değerlendirme skorunu hesaplar ve tüm detayları breakdown ile döner.
@@ -48,14 +25,14 @@ function calcOverallLLMScore(llm: QuestionLLMAnalysisScore): number {
 export function calculateQuestionEvaluationResult(
   faceScore: CleanFaceAnalysisScore,
   voiceScore: CleanVoiceAnalysisScore,
-  llmScore: QuestionLLMAnalysisScore,
+  llmScore: CleanLLMScore,
   weights: ScoreWeights,
   llmCommentary?: LLMGeneralAssessment // opsiyonel, GPT ile ekstra yorum
 ): QuestionEvaluationResult {
   // 1. LLM genel skoru varsa al, yoksa otomatik hesapla
   const llmOverall = typeof llmScore.overallLLMScore === 'number'
     ? llmScore.overallLLMScore
-    : calcOverallLLMScore(llmScore);
+    : 0;
 
   // 2. Normalize ağırlıklar
   const normWeights = normalizeWeights(weights);
@@ -88,7 +65,7 @@ export function calculateQuestionEvaluationResult(
     },
     faceScore,
     voiceScore,
-    llmScore: { ...llmScore, overallLLMScore: llmOverall },
+    llmScore,
     isReliable,
     warnings,
     llmCommentary,

@@ -12,7 +12,7 @@ export async function interviewRecordRoutes(server: FastifyInstance) {
       if (!interview || !interview.questions || !Array.isArray(interview.questions)) {
         return reply.status(400).send({ ok: false, error: 'interview.questions array is required' });
       }
-      const interviewRecord = await createInterviewRecordAndPipelines({ meta, application, interview });
+      const interviewRecord = await createInterviewRecordAndPipelines({ meta, application, interview});
       return reply.status(201).send({
         ok: true,
         interviewRecordId: interviewRecord._id,

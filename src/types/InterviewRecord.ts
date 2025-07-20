@@ -15,6 +15,7 @@ export interface InterviewRecord {
       videoResponseId?: string;
       videoUrl?: string;
       pipelineId?: string;  // Bu sorunun pipeline job id’si
+      analysis?: any; // Soruya verilen yanıtın değerlendirme sonucu
     }>
   };
   overallScore?: number;
