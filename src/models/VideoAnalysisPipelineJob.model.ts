@@ -33,7 +33,7 @@ pipelineSteps: {
     face_analyzed: PipelineStepSchema,
     voice_analyzed: PipelineStepSchema,
     question_analyzed: PipelineStepSchema, // Yeni adım eklendi
-    gpt_analyzed: PipelineStepSchema,
+    question_evaluated: PipelineStepSchema,
     final_scored: PipelineStepSchema,
     results_saved: PipelineStepSchema
   },
@@ -45,7 +45,7 @@ pipelineSteps: {
     input_normalized: { state: 'pending' },
     face_analyzed: { state: 'pending' },
     voice_analyzed: { state: 'pending' },
-    gpt_analyzed: { state: 'pending' },
+    question_evaluated: { state: 'pending' },
     final_scored: { state: 'pending' },
     results_saved: { state: 'pending' },
     question_analyzed: { state: 'pending' } // Yeni adım eklendi
@@ -64,7 +64,7 @@ pipelineSteps: {
   audioPath:   { type: String },
   transcription: { type: Schema.Types.Mixed },
   normalizedInput: { type: Schema.Types.Mixed },
-  aiResult:    { type: Schema.Types.Mixed },
+  evaluationResult:    { type: Schema.Types.Mixed },
   faceScores:  { type: Schema.Types.Mixed },
   voiceScores: { type: Schema.Types.Mixed },
   questionAIResult: { type: Schema.Types.Mixed }, // Soru-yanıt AI analizi sonucu

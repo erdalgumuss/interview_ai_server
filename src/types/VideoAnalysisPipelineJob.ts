@@ -18,7 +18,7 @@ export type PipelineStepKey =
   | 'face_analyzed'
   | 'voice_analyzed'
   | 'question_analyzed'
-  | 'gpt_analyzed'
+  | 'question_evaluated' // Yeni adım eklendi
   | 'final_scored'
   | 'results_saved'
 
@@ -87,7 +87,7 @@ export interface VideoAnalysisPipelineJob {
   audioPath?: string;
   transcription?: any;
   normalizedInput?: any;
-  aiResult?: any;
+  evaluationResult?: any;
   faceScores?: any;
   voiceScores?: any;
   questionAIResult?: any; // Soru-yanıt AI analizi sonucu
